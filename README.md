@@ -4,9 +4,9 @@ Note: WIP, see bottom of README for todos
 
 Interactive module using [`autotui`](https://github.com/seanbreckenridge/autotui) to generate code/aliases to save things I do often
 
-Given a `NamedTuple` (hence the name) defined in [`tupletally/models.py`](tupletally/models.py)
+Given a `NamedTuple` (hence the name) defined in [`tupletally/models.py`](tupletally/models.py), this creates interactive interfaces which validate my input to log information to JSON files
 
-Currently, I use this to store info like whenever I drink water/shower/log my current weight periodically
+Currently, I use this to store info like whenever I drink water/shower/my current weight periodically
 
 ```
 Usage: tupletally [OPTIONS] COMMAND [ARGS]...
