@@ -78,11 +78,11 @@ You can set the `TUPLETALLY_DATA_DIR` environment variable to the directory that
 I cache the generated aliases by putting a block like this in my shell config (i.e. it runs the first time I start a terminal, but then stays the same until I remove the file/my computer restarts):
 
 ```bash
-TUPLETALLY='/tmp/tupletally_aliases'
-if [[ ! -e "${TUPLETALLY}" ]]; then
-  tupletally generate >"${TUPLETALLY}"
+TUPLETALLY_ALIASES='/tmp/tupletally_aliases'
+if [[ ! -e "${TUPLETALLY_ALIASES}" ]]; then
+  tupletally generate >"${TUPLETALLY_ALIASES}"
 fi
-source "${TUPLETALLY}"
+source "${TUPLETALLY_ALIASES}"
 ```
 
 ---
