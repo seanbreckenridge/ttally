@@ -1,5 +1,4 @@
 from typing import Iterator, Any
-import pprint
 
 import more_itertools
 
@@ -18,4 +17,5 @@ def query_recent(for_function: str, count: int) -> Iterator[Any]:
 
 
 def query_print(for_function: str, count: int = 10) -> None:
-    pprint.pprint(list(query_recent(for_function, count)))
+    for o in query_recent(for_function, count):
+        print(o)

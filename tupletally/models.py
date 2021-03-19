@@ -1,34 +1,18 @@
-import sys
 import inspect
 
-from datetime import datetime
-from typing import NamedTuple, Any
+from typing import Any
 
-# if you define a datetime on a model, the attribute name should be 'when'
+# should already be configured, since __init__.py hook runs
+# when the module is initially loaded
 
-
-class Shower(NamedTuple):
-    when: datetime
+from tupletally import config
 
 
-class Weight(NamedTuple):
-    when: datetime
-    pounds: float
-
-
-class Water(NamedTuple):
-    when: datetime
-    glasses: float
-
-
-def _class_defined_in_module(o: Any) -> bool:
-    return inspect.isclass(o) and o.__module__ == __name__
+def _is_model(o: Any) -> bool:
+    return inspect.isclass(o) and issubclass(o, tuple) and hasattr(o, "_fields")
 
 
 # dynamically create a list of each of these
 MODELS = {
-    name.casefold(): klass
-    for name, klass in inspect.getmembers(
-        sys.modules[__name__], _class_defined_in_module
-    )
+    name.casefold(): klass for name, klass in inspect.getmembers(config, _is_model)
 }

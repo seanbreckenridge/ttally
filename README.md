@@ -1,10 +1,8 @@
 # tupletally
 
-Note: WIP, see bottom of README for todos
-
 Interactive module using [`autotui`](https://github.com/seanbreckenridge/autotui) to generate code/aliases to save things I do often. Used as part of [`HPI`](https://github.com/seanbreckenridge/HPI)
 
-Given a `NamedTuple` (hence the name) defined in [`tupletally/models.py`](tupletally/models.py), this creates interactive interfaces which validate my input to log information to JSON files
+Given a `NamedTuple` (hence the name) defined in [`~/.config/tupletally.py`](https://sean.fish/d/tupletally.py), this creates interactive interfaces which validate my input to log information to JSON files
 
 Currently, I use this to store info like whenever I drink water/shower/my current weight periodically
 
@@ -27,14 +25,11 @@ Commands:
   generate  Generate the aliases!
 ```
 
-In other words, it converts this:
+In other words, it converts this (the config file at `~/.config/tupletally.py`)
 
 ```python
-import sys
-import inspect
-
 from datetime import datetime
-from typing import NamedTuple, Any
+from typing import NamedTuple
 
 # if you define a datetime on a model, the attribute name should be 'when'
 
@@ -52,18 +47,6 @@ class Water(NamedTuple):
     when: datetime
     glasses: float
 
-
-def _class_defined_in_module(o: Any) -> bool:
-    return inspect.isclass(o) and o.__module__ == __name__
-
-
-# dynamically create a list of each of these
-MODELS = {
-    name.casefold(): klass
-    for name, klass in inspect.getmembers(
-        sys.modules[__name__], _class_defined_in_module
-    )
-}
 ```
 
 to...
@@ -97,46 +80,55 @@ Whenever I run any of those aliases, it opens an interactive interface like this
 
 This also gives me `{tuple}-recent` aliases, which print the 10 most recent items I've logged. For example:
 
+```python
+> water-recent
+Water(when=datetime.datetime(2021, 3, 19, 20, 20, 27, tzinfo=datetime.timezone.utc), glasses=1.0)
+Water(when=datetime.datetime(2021, 3, 19, 14, 33, 57, tzinfo=datetime.timezone.utc), glasses=1.0)
+Water(when=datetime.datetime(2021, 3, 19, 9, 41, 53, tzinfo=datetime.timezone.utc), glasses=1.0)
+Water(when=datetime.datetime(2021, 3, 19, 8, 28, 10, tzinfo=datetime.timezone.utc), glasses=1.0)
+Water(when=datetime.datetime(2021, 3, 19, 7, 14, 34, tzinfo=datetime.timezone.utc), glasses=1.5)
+Water(when=datetime.datetime(2021, 3, 19, 3, 39, 56, tzinfo=datetime.timezone.utc), glasses=0.75)
+Water(when=datetime.datetime(2021, 3, 19, 0, 16, 42, tzinfo=datetime.timezone.utc), glasses=1.0)
+Water(when=datetime.datetime(2021, 3, 18, 5, 5, 19, tzinfo=datetime.timezone.utc), glasses=1.0)
+Water(when=datetime.datetime(2021, 3, 18, 3, 17, 26, tzinfo=datetime.timezone.utc), glasses=1.5)
+Water(when=datetime.datetime(2021, 3, 18, 3, 5, 14, tzinfo=datetime.timezone.utc), glasses=1.0)
 ```
-$ water-recent
-[Water(when=datetime.datetime(2021, 3, 19, 9, 41, 53, tzinfo=datetime.timezone.utc), glasses=1.0),
- Water(when=datetime.datetime(2021, 3, 19, 8, 28, 10, tzinfo=datetime.timezone.utc), glasses=1.0),
- Water(when=datetime.datetime(2021, 3, 19, 7, 14, 34, tzinfo=datetime.timezone.utc), glasses=1.5),
- Water(when=datetime.datetime(2021, 3, 19, 3, 39, 56, tzinfo=datetime.timezone.utc), glasses=0.75),
- Water(when=datetime.datetime(2021, 3, 19, 0, 16, 42, tzinfo=datetime.timezone.utc), glasses=1.0),
- Water(when=datetime.datetime(2021, 3, 18, 5, 5, 19, tzinfo=datetime.timezone.utc), glasses=1.0),
- Water(when=datetime.datetime(2021, 3, 18, 3, 17, 26, tzinfo=datetime.timezone.utc), glasses=1.5),
- Water(when=datetime.datetime(2021, 3, 18, 3, 5, 14, tzinfo=datetime.timezone.utc), glasses=1.0),
- Water(when=datetime.datetime(2021, 3, 17, 10, 2, 56, tzinfo=datetime.timezone.utc), glasses=1.0),
- Water(when=datetime.datetime(2021, 3, 17, 4, 8, 42, tzinfo=datetime.timezone.utc), glasses=1.0)
+
+## Library Usage
+
+The whole point of this interface is that it validates my input to types, stores it as a basic editable format (JSON), but is still loadable into typed ADT-like Python objects, with minimal boilerplate. I just need to add a NamedTuple to `~/.config/tupletally.py`, and all the interfaces and resulting JSON files are generated.
+
+To load the items into python, you can do:
+
+```python
+from tupletally.autotui_ext import glob_namedtuple
+from tupletally.config import Water
+
+print(list(glob_namedtuple(Water)))
 ```
+
+See [`here`](https://github.com/seanbreckenridge/HPI/blob/master/my/body.py) for my usage in `HPI`.
 
 ## Installation
 
 ```shell
 git clone https://github.com/seanbreckenridge/tupletally
 cd ./tupletally
-# edit tupletally/models.py to whatever models you want
 pip install .
+# setup a ~/.config/tupletally.py file.
+# You can use the block above as a starting point,
+# or start off with mine:
+curl -s "https://sean.fish/d/tupletally.py" > ~/.config/tupletally.py
 ```
 
-You can set the `TUPLETALLY_DATA_DIR` environment variable to the directory that `tupletally` should save data to, defaults to `~/data/tupletally`
+You can set the `TUPLETALLY_DATA_DIR` environment variable to the directory that `tupletally` should save data to, defaults to `~/.local/share/tupletally`. If you want to use a different path for configuration, you can set the `TUPLETALLY_CFG` to the absolute path to the file.
 
 I cache the generated aliases by putting a block like this in my shell config (i.e. it runs the first time I start a terminal, but then stays the same until I remove the file/my computer restarts):
 
 ```bash
 TUPLETALLY_ALIASES='/tmp/tupletally_aliases'
 if [[ ! -e "${TUPLETALLY_ALIASES}" ]]; then
-  tupletally generate >"${TUPLETALLY_ALIASES}"
+  python3 -m tupletally generate >"${TUPLETALLY_ALIASES}"
 fi
 source "${TUPLETALLY_ALIASES}"
 ```
-
----
-
-Note: still finishing up the interface for this, so will probably change a bit, i.e. the following:
-
-- change models.py to import from `~/.config/tupletally.py`? using importlib hackery?
-- change default from `~/data/tupletally` to something else?
-- add python library usage, for `glob_namedtuple`
-- add command to combine/print model as JSON

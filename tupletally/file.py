@@ -8,12 +8,14 @@ from pathlib import Path
 
 
 OS = sys.platform.casefold()
-TUPLETALLY_DATA_DIR: str = os.environ.get("TUPLETALLY_DATA_DIR", "~/data/tupletally")
+ENV = "TUPLETALLY_DATA_DIR"
+DEFAULT_DATA = "~/.local/share/tupletally"
 
 
 @lru_cache(1)
 def tupletally_abs() -> Path:
-    p = Path(TUPLETALLY_DATA_DIR).expanduser().absolute()
+    ddir: str = os.environ.get(ENV, DEFAULT_DATA)
+    p = Path(ddir).expanduser().absolute()
     if not p.exists():
         warnings.warn(f"{p} does not exist, creating...")
         p.mkdir()
@@ -21,9 +23,9 @@ def tupletally_abs() -> Path:
 
 
 # creates unique datafiles for each platform
-def datafile(for_function: str) -> Path:
+def datafile(for_function: str, in_dir: Optional[Path] = None) -> Path:
     unique_path = f"{for_function}-{OS}.json"
-    return tupletally_abs() / unique_path
+    return Path(in_dir or tupletally_abs()).absolute() / unique_path
 
 
 # globs all datafiles for some for_function
