@@ -29,7 +29,7 @@ Commands:
 
 In other words, it converts this:
 
-```
+```python
 import sys
 import inspect
 

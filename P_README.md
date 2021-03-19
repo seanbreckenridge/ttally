@@ -19,7 +19,7 @@ In other words, it converts this:
 
 ```
 >>>PMARK
-perl -E 'print "`"x3, "\n"'
+perl -E 'print "`"x3, "python", "\n"'
 cat ./tupletally/models.py
 perl -E 'print "`"x3, "\n"'
 ```
@@ -48,7 +48,7 @@ Whenever I run any of those aliases, it opens an interactive interface like this
 ]
 ```
 
-This also gives me `{tuple}-recent` aliases, which print the 10 most recent items I've saved. For example:
+This also gives me `{tuple}-recent` aliases, which print the 10 most recent items I've logged. For example:
 
 ```
 $ water-recent
