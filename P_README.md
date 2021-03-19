@@ -79,14 +79,16 @@ See [`here`](https://github.com/seanbreckenridge/HPI/blob/master/my/body.py) for
 
 ## Installation
 
-```shell
-git clone https://github.com/seanbreckenridge/tupletally
-cd ./tupletally
-pip install .
-# setup a ~/.config/tupletally.py file.
-# You can use the block above as a starting point,
-# or start off with mine:
-curl -s "https://sean.fish/d/tupletally.py" > ~/.config/tupletally.py
+```bash
+pip install 'git+https://github.com/seanbreckenridge/tupletally'
+```
+
+### Configuration
+
+You need to setup a `~/.config/tupletally.py` file. You can use the block above as a starting point, or with mine:
+
+```bash
+curl -s 'https://sean.fish/d/tupletally.py' > ~/.config/tupletally.py
 ```
 
 You can set the `TUPLETALLY_DATA_DIR` environment variable to the directory that `tupletally` should save data to, defaults to `~/.local/share/tupletally`. If you want to use a different path for configuration, you can set the `TUPLETALLY_CFG` to the absolute path to the file.
