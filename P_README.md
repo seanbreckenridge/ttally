@@ -2,7 +2,7 @@
 
 Note: WIP, see bottom of README for todos
 
-Interactive module using [`autotui`](https://github.com/seanbreckenridge/autotui) to generate code/aliases to save things I do often
+Interactive module using [`autotui`](https://github.com/seanbreckenridge/autotui) to generate code/aliases to save things I do often. Used as part of [`HPI`](https://github.com/seanbreckenridge/HPI)
 
 Given a `NamedTuple` (hence the name) defined in [`tupletally/models.py`](tupletally/models.py), this creates interactive interfaces which validate my input to log information to JSON files
 
