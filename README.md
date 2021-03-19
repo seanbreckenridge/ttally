@@ -25,7 +25,7 @@ Commands:
   generate  Generate the aliases!
 ```
 
-In other words, it converts this (the config file at `~/.config/tupletally.py`)
+In other words, it converts this (the config file at `~/.config/tupletally.py`):
 
 ```python
 from datetime import datetime

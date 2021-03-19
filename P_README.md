@@ -13,7 +13,7 @@ tupletally --help
 perl -E 'print "`"x3, "\n"'
 ```
 
-In other words, it converts this (the config file at `~/.config/tupletally.py`)
+In other words, it converts this (the config file at `~/.config/tupletally.py`):
 
 ```
 >>>PMARK
