@@ -73,7 +73,7 @@ Whenever I run any of those aliases, it opens an interactive interface like this
 [
   {
     "when": 1598856786,
-    "glass_count": 2.0
+    "glasses": 2.0
   }
 ]
 ```
