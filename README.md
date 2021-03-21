@@ -31,8 +31,6 @@ In other words, it converts this (the config file at `~/.config/tupletally.py`):
 from datetime import datetime
 from typing import NamedTuple
 
-# if you define a datetime on a model, the attribute name should be 'when'
-
 
 class Shower(NamedTuple):
     when: datetime
@@ -46,7 +44,6 @@ class Weight(NamedTuple):
 class Water(NamedTuple):
     when: datetime
     glasses: float
-
 ```
 
 to...
@@ -80,18 +77,18 @@ Whenever I run any of those aliases, it opens an interactive interface like this
 
 This also gives me `{tuple}-recent` aliases, which print the 10 most recent items I've logged. For example:
 
-```python
-> water-recent
-Water(when=datetime.datetime(2021, 3, 19, 20, 20, 27, tzinfo=datetime.timezone.utc), glasses=1.0)
-Water(when=datetime.datetime(2021, 3, 19, 14, 33, 57, tzinfo=datetime.timezone.utc), glasses=1.0)
-Water(when=datetime.datetime(2021, 3, 19, 9, 41, 53, tzinfo=datetime.timezone.utc), glasses=1.0)
-Water(when=datetime.datetime(2021, 3, 19, 8, 28, 10, tzinfo=datetime.timezone.utc), glasses=1.0)
-Water(when=datetime.datetime(2021, 3, 19, 7, 14, 34, tzinfo=datetime.timezone.utc), glasses=1.5)
-Water(when=datetime.datetime(2021, 3, 19, 3, 39, 56, tzinfo=datetime.timezone.utc), glasses=0.75)
-Water(when=datetime.datetime(2021, 3, 19, 0, 16, 42, tzinfo=datetime.timezone.utc), glasses=1.0)
-Water(when=datetime.datetime(2021, 3, 18, 5, 5, 19, tzinfo=datetime.timezone.utc), glasses=1.0)
-Water(when=datetime.datetime(2021, 3, 18, 3, 17, 26, tzinfo=datetime.timezone.utc), glasses=1.5)
-Water(when=datetime.datetime(2021, 3, 18, 3, 5, 14, tzinfo=datetime.timezone.utc), glasses=1.0)
+```
+$ water-recent
+2021-03-20 18:23:24     2.0
+2021-03-20 01:28:27     1.0
+2021-03-19 23:34:12     1.0
+2021-03-19 22:49:05     1.5
+2021-03-19 16:05:34     1.0
+2021-03-19 13:20:27     1.0
+2021-03-19 07:33:57     1.0
+2021-03-19 02:41:53     1.0
+2021-03-19 01:28:10     1.0
+2021-03-19 00:14:34     1.5
 ```
 
 ## Library Usage
