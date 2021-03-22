@@ -51,13 +51,13 @@ to...
 ```
 alias shower='python3 -c "import tupletally.codegen as t;m=t.MODELS[\"shower\"];t.p(m)"'
 alias shower-now='python3 -c "import tupletally.codegen as t;m=t.MODELS[\"shower\"];t.pn(m)"'
-alias shower-recent='python3 -c "import tupletally.codegen as t;t.qr(\"shower\")"'
+alias shower-recent='python3 -c "import tupletally.codegen as t;m=t.MODELS[\"shower\"];t.qr(m)"'
 alias water='python3 -c "import tupletally.codegen as t;m=t.MODELS[\"water\"];t.p(m)"'
 alias water-now='python3 -c "import tupletally.codegen as t;m=t.MODELS[\"water\"];t.pn(m)"'
-alias water-recent='python3 -c "import tupletally.codegen as t;t.qr(\"water\")"'
+alias water-recent='python3 -c "import tupletally.codegen as t;m=t.MODELS[\"water\"];t.qr(m)"'
 alias weight='python3 -c "import tupletally.codegen as t;m=t.MODELS[\"weight\"];t.p(m)"'
 alias weight-now='python3 -c "import tupletally.codegen as t;m=t.MODELS[\"weight\"];t.pn(m)"'
-alias weight-recent='python3 -c "import tupletally.codegen as t;t.qr(\"weight\")"'
+alias weight-recent='python3 -c "import tupletally.codegen as t;m=t.MODELS[\"weight\"];t.qr(m)"'
 ```
 
 Whenever I run any of those aliases, it opens an interactive interface like this:
@@ -80,17 +80,12 @@ The `{tuple}-now` aliases set the any `datetime` values for the prompted tuple t
 This also gives me `{tuple}-recent` aliases, which print the 10 most recent items I've logged. For example:
 
 ```
-$ water-recent
+$ water-recent 5
 2021-03-20 18:23:24     2.0
 2021-03-20 01:28:27     1.0
 2021-03-19 23:34:12     1.0
 2021-03-19 22:49:05     1.5
 2021-03-19 16:05:34     1.0
-2021-03-19 13:20:27     1.0
-2021-03-19 07:33:57     1.0
-2021-03-19 02:41:53     1.0
-2021-03-19 01:28:10     1.0
-2021-03-19 00:14:34     1.5
 ```
 
 ## Library Usage

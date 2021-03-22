@@ -51,17 +51,12 @@ The `{tuple}-now` aliases set the any `datetime` values for the prompted tuple t
 This also gives me `{tuple}-recent` aliases, which print the 10 most recent items I've logged. For example:
 
 ```
-$ water-recent
+$ water-recent 5
 2021-03-20 18:23:24     2.0
 2021-03-20 01:28:27     1.0
 2021-03-19 23:34:12     1.0
 2021-03-19 22:49:05     1.5
 2021-03-19 16:05:34     1.0
-2021-03-19 13:20:27     1.0
-2021-03-19 07:33:57     1.0
-2021-03-19 02:41:53     1.0
-2021-03-19 01:28:10     1.0
-2021-03-19 00:14:34     1.5
 ```
 
 ## Library Usage
