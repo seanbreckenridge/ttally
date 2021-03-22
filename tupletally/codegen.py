@@ -31,7 +31,7 @@ def pn(nt: Any) -> None:
 
 def qr(nt: Any) -> None:
     # remove python flags from args (e.g. '-c')
-    args = [a for a in sys.argv if not a.startswith('-')]
+    args: List[str] = [a for a in sys.argv if not a.startswith('-')]
     # default to showing 10 items
     count: int = 10
     if args:

@@ -2,12 +2,16 @@ import os
 import sys
 import warnings
 import glob
+import socket
 from functools import lru_cache
 from typing import List, Optional
 from pathlib import Path
 
 
 OS = sys.platform.casefold()
+# for why this uses socket:
+# https://docs.python.org/3/library/os.html#os.uname
+HOSTNAME = "".join(socket.gethostname().split()).casefold()
 ENV = "TUPLETALLY_DATA_DIR"
 DEFAULT_DATA = "~/.local/share/tupletally"
 
@@ -24,7 +28,9 @@ def tupletally_abs() -> Path:
 
 # creates unique datafiles for each platform
 def datafile(for_function: str, in_dir: Optional[Path] = None) -> Path:
-    unique_path = f"{for_function}-{OS}.json"
+    # add some OS/platform specific code to this, to prevent
+    # conflicts across computers while using syncthing
+    unique_path = f"{for_function}-{OS}-{HOSTNAME}.json"
     return Path(in_dir or tupletally_abs()).absolute() / unique_path
 
 

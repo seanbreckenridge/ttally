@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import NamedTuple, Any, Dict, Callable, List, Iterator, Optional
 from itertools import chain
 
-from autotui.shortcuts import load_prompt_and_writeback, load_from, dump_to
+from autotui.shortcuts import load_prompt_and_writeback, load_from
 from autotui.namedtuple_prompt import namedtuple_prompt_funcs
 from autotui.typehelpers import strip_optional
 
