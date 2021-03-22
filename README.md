@@ -49,15 +49,15 @@ class Water(NamedTuple):
 to...
 
 ```
-alias shower='python3 -c "import tupletally.codegen as t;m=t.MODELS[\"shower\"];t.prompt(m)"'
-alias shower-now='python3 -c "import tupletally.codegen as t;m=t.MODELS[\"shower\"];t.prompt_now(m)"'
-alias shower-recent='python3 -c "import tupletally.codegen as t;t.query_print(\"shower\")"'
-alias water='python3 -c "import tupletally.codegen as t;m=t.MODELS[\"water\"];t.prompt(m)"'
-alias water-now='python3 -c "import tupletally.codegen as t;m=t.MODELS[\"water\"];t.prompt_now(m)"'
-alias water-recent='python3 -c "import tupletally.codegen as t;t.query_print(\"water\")"'
-alias weight='python3 -c "import tupletally.codegen as t;m=t.MODELS[\"weight\"];t.prompt(m)"'
-alias weight-now='python3 -c "import tupletally.codegen as t;m=t.MODELS[\"weight\"];t.prompt_now(m)"'
-alias weight-recent='python3 -c "import tupletally.codegen as t;t.query_print(\"weight\")"'
+alias shower='python3 -c "import tupletally.codegen as t;m=t.MODELS[\"shower\"];t.p(m)"'
+alias shower-now='python3 -c "import tupletally.codegen as t;m=t.MODELS[\"shower\"];t.pn(m)"'
+alias shower-recent='python3 -c "import tupletally.codegen as t;t.qr(\"shower\")"'
+alias water='python3 -c "import tupletally.codegen as t;m=t.MODELS[\"water\"];t.p(m)"'
+alias water-now='python3 -c "import tupletally.codegen as t;m=t.MODELS[\"water\"];t.pn(m)"'
+alias water-recent='python3 -c "import tupletally.codegen as t;t.qr(\"water\")"'
+alias weight='python3 -c "import tupletally.codegen as t;m=t.MODELS[\"weight\"];t.p(m)"'
+alias weight-now='python3 -c "import tupletally.codegen as t;m=t.MODELS[\"weight\"];t.pn(m)"'
+alias weight-recent='python3 -c "import tupletally.codegen as t;t.qr(\"weight\")"'
 ```
 
 Whenever I run any of those aliases, it opens an interactive interface like this:
@@ -74,6 +74,8 @@ Whenever I run any of those aliases, it opens an interactive interface like this
   }
 ]
 ```
+
+The `{tuple}-now` aliases set the any `datetime` values for the prompted tuple to now
 
 This also gives me `{tuple}-recent` aliases, which print the 10 most recent items I've logged. For example:
 

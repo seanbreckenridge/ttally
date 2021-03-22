@@ -46,6 +46,8 @@ Whenever I run any of those aliases, it opens an interactive interface like this
 ]
 ```
 
+The `{tuple}-now` aliases set the any `datetime` values for the prompted tuple to now
+
 This also gives me `{tuple}-recent` aliases, which print the 10 most recent items I've logged. For example:
 
 ```
