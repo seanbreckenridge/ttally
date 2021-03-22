@@ -63,10 +63,10 @@ def namedtuple_prompt_now(nt: Any) -> Any:
 def prompt_now(nt: NamedTuple) -> None:
     # load items from file
     p: Path = datafile(namedtuple_func_name(nt))
-    items: List[NamedTuple] = load_from_safe(nt, p)
-    new_item: Any = namedtuple_prompt_now(nt)
-    items.append(new_item)
-    dump_to(items, p)
+    # the lambda is to match the argument count
+    # of the prompt_namedtuple function from autotui
+    nt_wrapped = lambda n, _a, _t: namedtuple_prompt_now(n)
+    load_prompt_and_writeback(nt, p, prompt_function=nt_wrapped)
 
 
 # takes one of the models.py and loads all data from it
