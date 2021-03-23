@@ -22,6 +22,7 @@ Options:
   --help  Show this message and exit.
 
 Commands:
+  export      List all the data from a model as JSON
   from-json   A way to allow external programs to save JSON data to the...
   generate    Generate the aliases!
   prompt      Prompt for every field in the given model

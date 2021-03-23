@@ -1,5 +1,4 @@
-import sys
-from typing import Iterator, Any, List
+from typing import Iterator
 
 from .models import MODELS
 
