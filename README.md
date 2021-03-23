@@ -44,11 +44,20 @@ class Weight(NamedTuple):
 class Water(NamedTuple):
     when: datetime
     glasses: float
+
+
+class Food(NamedTuple):
+    when: datetime
+    food: str
+    calories: float
 ```
 
 to...
 
 ```
+alias food='python3 -c "import tupletally.codegen as t;m=t.MODELS[\"food\"];t.p(m)"'
+alias food-now='python3 -c "import tupletally.codegen as t;m=t.MODELS[\"food\"];t.pn(m)"'
+alias food-recent='python3 -c "import tupletally.codegen as t;m=t.MODELS[\"food\"];t.qr(m)"'
 alias shower='python3 -c "import tupletally.codegen as t;m=t.MODELS[\"shower\"];t.p(m)"'
 alias shower-now='python3 -c "import tupletally.codegen as t;m=t.MODELS[\"shower\"];t.pn(m)"'
 alias shower-recent='python3 -c "import tupletally.codegen as t;m=t.MODELS[\"shower\"];t.qr(m)"'
