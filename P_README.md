@@ -1,6 +1,6 @@
 # tupletally
 
-Interactive module using [`autotui`](https://github.com/seanbreckenridge/autotui) to generate code/aliases to save things I do often. Used as part of [`HPI`](https://github.com/seanbreckenridge/HPI)
+Interactive module using [`autotui`](https://github.com/seanbreckenridge/autotui) to save things I do often to JSON. Used as part of [`HPI`](https://github.com/seanbreckenridge/HPI)
 
 Given a `NamedTuple` (hence the name) defined in [`~/.config/tupletally.py`](https://sean.fish/d/tupletally.py), this creates interactive interfaces which validate my input to log information to JSON files
 
@@ -58,6 +58,8 @@ $ water-recent 5
 2021-03-19 22:49:05     1.5
 2021-03-19 16:05:34     1.0
 ```
+
+The `from-json` command can be used to send this JSON which matches a model, i.e. providing a non-interactive interface, incase I want to [call this from a script](https://github.com/seanbreckenridge/HPI/blob/master/scripts/food-fzf)
 
 ## Library Usage
 

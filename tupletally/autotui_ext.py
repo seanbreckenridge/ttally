@@ -20,6 +20,7 @@ def load_from_safe(to: NamedTuple, path: Path) -> List[NamedTuple]:
         return load_from(to, path)
 
 
+# TODO: move this away from autotui_ext?
 def namedtuple_func_name(nt: Any) -> str:
     assert hasattr(nt, "_fields"), "Did not receive a valid NamedTuple!"
     return str(nt.__name__.casefold())

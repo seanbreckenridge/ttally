@@ -1,6 +1,6 @@
 # tupletally
 
-Interactive module using [`autotui`](https://github.com/seanbreckenridge/autotui) to generate code/aliases to save things I do often. Used as part of [`HPI`](https://github.com/seanbreckenridge/HPI)
+Interactive module using [`autotui`](https://github.com/seanbreckenridge/autotui) to save things I do often to JSON. Used as part of [`HPI`](https://github.com/seanbreckenridge/HPI)
 
 Given a `NamedTuple` (hence the name) defined in [`~/.config/tupletally.py`](https://sean.fish/d/tupletally.py), this creates interactive interfaces which validate my input to log information to JSON files
 
@@ -22,7 +22,11 @@ Options:
   --help  Show this message and exit.
 
 Commands:
-  generate  Generate the aliases!
+  from-json   A way to allow external programs to save JSON data to the...
+  generate    Generate the aliases!
+  prompt      Prompt for every field in the given model
+  prompt-now  Prompt for every field in the model, except datetime, which...
+  recent      List recent items logged for this model
 ```
 
 In other words, it converts this (the config file at `~/.config/tupletally.py`):
@@ -49,24 +53,24 @@ class Water(NamedTuple):
 class Food(NamedTuple):
     when: datetime
     food: str
-    calories: float
+    calories: int
 ```
 
 to...
 
 ```
-alias food='python3 -c "import tupletally.codegen as t;m=t.MODELS[\"food\"];t.p(m)"'
-alias food-now='python3 -c "import tupletally.codegen as t;m=t.MODELS[\"food\"];t.pn(m)"'
-alias food-recent='python3 -c "import tupletally.codegen as t;m=t.MODELS[\"food\"];t.qr(m)"'
-alias shower='python3 -c "import tupletally.codegen as t;m=t.MODELS[\"shower\"];t.p(m)"'
-alias shower-now='python3 -c "import tupletally.codegen as t;m=t.MODELS[\"shower\"];t.pn(m)"'
-alias shower-recent='python3 -c "import tupletally.codegen as t;m=t.MODELS[\"shower\"];t.qr(m)"'
-alias water='python3 -c "import tupletally.codegen as t;m=t.MODELS[\"water\"];t.p(m)"'
-alias water-now='python3 -c "import tupletally.codegen as t;m=t.MODELS[\"water\"];t.pn(m)"'
-alias water-recent='python3 -c "import tupletally.codegen as t;m=t.MODELS[\"water\"];t.qr(m)"'
-alias weight='python3 -c "import tupletally.codegen as t;m=t.MODELS[\"weight\"];t.p(m)"'
-alias weight-now='python3 -c "import tupletally.codegen as t;m=t.MODELS[\"weight\"];t.pn(m)"'
-alias weight-recent='python3 -c "import tupletally.codegen as t;m=t.MODELS[\"weight\"];t.qr(m)"'
+alias food='python3 -m tupletally prompt food'
+alias food-now='python3 -m tupletally prompt-now food'
+alias food-recent='python3 -m tupletally recent food'
+alias shower='python3 -m tupletally prompt shower'
+alias shower-now='python3 -m tupletally prompt-now shower'
+alias shower-recent='python3 -m tupletally recent shower'
+alias water='python3 -m tupletally prompt water'
+alias water-now='python3 -m tupletally prompt-now water'
+alias water-recent='python3 -m tupletally recent water'
+alias weight='python3 -m tupletally prompt weight'
+alias weight-now='python3 -m tupletally prompt-now weight'
+alias weight-recent='python3 -m tupletally recent weight'
 ```
 
 Whenever I run any of those aliases, it opens an interactive interface like this:
@@ -96,6 +100,8 @@ $ water-recent 5
 2021-03-19 22:49:05     1.5
 2021-03-19 16:05:34     1.0
 ```
+
+The `from-json` command can be used to send this JSON which matches a model, i.e. providing a non-interactive interface, incase I want to [call this from a script](https://github.com/seanbreckenridge/HPI/blob/master/scripts/food-fzf)
 
 ## Library Usage
 

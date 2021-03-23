@@ -3,6 +3,7 @@ import sys
 import warnings
 import glob
 import socket
+from datetime import datetime
 from functools import lru_cache
 from typing import List, Optional
 from pathlib import Path
@@ -12,6 +13,7 @@ OS = sys.platform.casefold()
 # for why this uses socket:
 # https://docs.python.org/3/library/os.html#os.uname
 HOSTNAME = "".join(socket.gethostname().split()).casefold()
+TIMESTAMP = datetime.strftime(datetime.now(), "%Y-%m")
 ENV = "TUPLETALLY_DATA_DIR"
 DEFAULT_DATA = "~/.local/share/tupletally"
 
@@ -30,7 +32,7 @@ def tupletally_abs() -> Path:
 def datafile(for_function: str, in_dir: Optional[Path] = None) -> Path:
     # add some OS/platform specific code to this, to prevent
     # conflicts across computers while using syncthing
-    unique_path = f"{for_function}-{OS}-{HOSTNAME}.json"
+    unique_path = f"{for_function}-{OS}-{HOSTNAME}-{TIMESTAMP}.json"
     return Path(in_dir or tupletally_abs()).absolute() / unique_path
 
 
