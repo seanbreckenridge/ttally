@@ -32,6 +32,8 @@ def tupletally_abs() -> Path:
 def datafile(for_function: str, in_dir: Optional[Path] = None) -> Path:
     # add some OS/platform specific code to this, to prevent
     # conflicts across computers while using syncthing
+    # this also decreases the amount of items that have
+    # to be loaded into memory for load_prompt_and_writeback
     unique_path = f"{for_function}-{OS}-{HOSTNAME}-{TIMESTAMP}.json"
     return Path(in_dir or tupletally_abs()).absolute() / unique_path
 

@@ -2,7 +2,7 @@ import warnings
 import inspect
 from pathlib import Path
 from datetime import datetime
-from typing import NamedTuple, Any, Dict, Callable, List, Iterator, Optional
+from typing import NamedTuple, Any, Dict, Callable, List, Iterator, Optional, Type
 from itertools import chain
 
 from autotui.shortcuts import load_prompt_and_writeback, load_from
@@ -12,7 +12,7 @@ from autotui.typehelpers import strip_optional
 from .file import datafile, glob_datafiles
 
 
-def load_from_safe(to: NamedTuple, path: Path) -> List[NamedTuple]:
+def load_from_safe(to: Type[NamedTuple], path: Path) -> List[NamedTuple]:
     if not path.exists():
         warnings.warn(f"{path} did not exist, returning empty list")
         return []
@@ -34,11 +34,11 @@ def prompt(nt: Any) -> None:
 
 def namedtuple_extract_from_annotation(nt: Any, _type: Any) -> str:
     """
-    class Test(NamedTuple):
-        something: datetime
-
+    >>> from typing import NamedTuple; from datetime import datetime
+    >>> class Test(NamedTuple):
+            something: datetime
     >>> namedtuple_extract_from_annotation(Test, datetime)
-    "something"
+    'something'
     """
     for attr_name, param in inspect.signature(nt).parameters.items():
         param_type, _ = strip_optional(param.annotation)
@@ -61,7 +61,7 @@ def namedtuple_prompt_now(nt: Any) -> Any:
 
 
 # prompt, but set the datetime for the resulting nametuple to now
-def prompt_now(nt: NamedTuple) -> None:
+def prompt_now(nt: Type[NamedTuple]) -> None:
     # load items from file
     p: Path = datafile(namedtuple_func_name(nt))
     # the lambda is to match the argument count
