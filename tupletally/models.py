@@ -1,6 +1,6 @@
 import inspect
 
-from typing import Any
+from typing import Any, Dict, NamedTuple, Type
 
 # should already be configured, since __init__.py hook runs
 # when the module is initially loaded
@@ -13,6 +13,6 @@ def _is_model(o: Any) -> bool:
 
 
 # dynamically create a list of each of these
-MODELS = {
+MODELS: Dict[str, Type[NamedTuple]] = {
     name.casefold(): klass for name, klass in inspect.getmembers(config, _is_model)
 }

@@ -1,6 +1,6 @@
 import sys
 import json
-from typing import Any
+from typing import Any, NamedTuple, Type
 
 import click
 
@@ -11,7 +11,7 @@ from .json import save_from_stdin, glob_json
 from .models import MODELS
 
 
-def _model_from_string(model_name: str) -> Any:
+def _model_from_string(model_name: str) -> Type[NamedTuple]:
     try:
         return MODELS[model_name]
     except KeyError:
