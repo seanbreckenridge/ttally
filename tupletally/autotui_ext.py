@@ -1,4 +1,3 @@
-import warnings
 import inspect
 from pathlib import Path
 from datetime import datetime
@@ -14,7 +13,6 @@ from .file import datafile, glob_datafiles
 
 def load_from_safe(to: Type[NamedTuple], path: Path) -> List[NamedTuple]:
     if not path.exists():
-        warnings.warn(f"{path} did not exist, returning empty list")
         return []
     else:
         return load_from(to, path)
