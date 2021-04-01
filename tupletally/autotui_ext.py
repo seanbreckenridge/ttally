@@ -70,7 +70,9 @@ def prompt_now(nt: Type[NamedTuple]) -> None:
 
 
 # takes one of the models.py and loads all data from it
-def glob_namedtuple(nt: Type[NamedTuple], in_dir: Optional[Path] = None) -> Iterator[NamedTuple]:
+def glob_namedtuple(
+    nt: Type[NamedTuple], in_dir: Optional[Path] = None
+) -> Iterator[NamedTuple]:
     yield from chain(
         *map(
             lambda p: load_from_safe(nt, p),
