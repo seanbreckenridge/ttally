@@ -1,7 +1,7 @@
 import inspect
 from pathlib import Path
 from datetime import datetime
-from typing import NamedTuple, Any, Dict, Callable, List, Iterator, Optional, Type
+from typing import NamedTuple, Any, Dict, Callable, Iterator, Optional, Type
 from itertools import chain
 
 from autotui.shortcuts import load_prompt_and_writeback, load_from
@@ -9,13 +9,6 @@ from autotui.namedtuple_prompt import namedtuple_prompt_funcs
 from autotui.typehelpers import strip_optional
 
 from .file import datafile, glob_datafiles
-
-
-def load_from_safe(to: Type[NamedTuple], path: Path) -> List[NamedTuple]:
-    if not path.exists():
-        return []
-    else:
-        return load_from(to, path)
 
 
 # TODO: move this away from autotui_ext?
@@ -73,7 +66,7 @@ def glob_namedtuple(
 ) -> Iterator[NamedTuple]:
     yield from chain(
         *map(
-            lambda p: load_from_safe(nt, p),
+            lambda p: load_from(nt, p, allow_empty=True),
             glob_datafiles(namedtuple_func_name(nt), in_dir=in_dir),
         )
     )

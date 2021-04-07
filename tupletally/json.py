@@ -7,9 +7,9 @@ import json
 from typing import NamedTuple, Dict, Any, List, Type
 
 from autotui import namedtuple_sequence_loads
-from autotui.shortcuts import dump_to
+from autotui.shortcuts import dump_to, load_from
 
-from .autotui_ext import load_from_safe, namedtuple_func_name
+from .autotui_ext import namedtuple_func_name
 from .file import datafile, glob_datafiles
 
 
@@ -17,7 +17,7 @@ from .file import datafile, glob_datafiles
 def save_from_stdin(nt: Type[NamedTuple]) -> None:
     json_blob: str = sys.stdin.read()
     p = datafile(namedtuple_func_name(nt))
-    items: List[NamedTuple] = load_from_safe(nt, p)
+    items: List[NamedTuple] = load_from(nt, p, allow_empty=True)
     new_items: List[NamedTuple] = namedtuple_sequence_loads(json_blob, nt)
     items.extend(new_items)
     dump_to(items, p)
