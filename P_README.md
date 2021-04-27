@@ -37,7 +37,7 @@ Whenever I run any of those aliases, it inspects the model in the config file, d
 
 `ttally` is an interactive module using [`autotui`](https://github.com/seanbreckenridge/autotui) to save things I do often to JSON
 
-Currently, I use this to store info like whenever I drink water/shower/my current weight periodically
+Currently, I use this to store info like whenever I eat something/drink water/shower/my current weight periodically
 
 Given a `NamedTuple` defined in [`~/.config/ttally.py`](https://sean.fish/d/ttally.py), this creates interactive interfaces which validate my input to save information to JSON files
 
@@ -73,13 +73,19 @@ food-linux-bastion-2021-03.json
 food-linux-localhost-2021-04.json
 ```
 
-... which are then combined back into python, like:
+... which can then be combined back into python, like:
 
 ```python
-from ttally.autotui_ext import glob_namedtuple
-from ttally.config import Water
+from more_itertools import take  # just to grab a few items
 
-print(list(glob_namedtuple(Water)))
+from ttally.autotui_ext import glob_namedtuple
+from ttally.config import Food
+
+take(3, glob_namedtuple(Food))
+
+[Food(when=datetime.datetime(2020, 9, 27, 6, 49, 34, tzinfo=datetime.timezone.utc), calories=440, food='ramen, egg'),
+Food(when=datetime.datetime(2020, 9, 27, 6, 52, 16, tzinfo=datetime.timezone.utc), calories=160, food='2 eggs'),
+Food(when=datetime.datetime(2020, 9, 27, 6, 53, 44, tzinfo=datetime.timezone.utc), calories=50, food='ginger chai')]
 ```
 
 The `from-json` command can be used to send this JSON which matches a model, i.e. providing a non-interactive interface to add items, in case I want to [call this from a script](https://github.com/seanbreckenridge/HPI/blob/master/scripts/food-fzf)
