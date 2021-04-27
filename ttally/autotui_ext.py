@@ -1,11 +1,10 @@
 import inspect
 from pathlib import Path
 from datetime import datetime
-from typing import NamedTuple, Any, Dict, Callable, Iterator, Optional, Type
+from typing import NamedTuple, Any, Iterator, Optional, Type
 from itertools import chain
 
 from autotui.shortcuts import load_prompt_and_writeback, load_from
-from autotui.namedtuple_prompt import namedtuple_prompt_funcs
 from autotui.typehelpers import strip_optional
 
 from .file import datafile, glob_datafiles

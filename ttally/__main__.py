@@ -1,6 +1,6 @@
 import sys
 import json
-from typing import Any, NamedTuple, Type
+from typing import NamedTuple, Type
 
 import click
 
