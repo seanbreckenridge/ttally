@@ -86,7 +86,7 @@ The whole point of this interface is that it validates my input to types, stores
 
 This intentionally uses JSON and doesn't store the info into a single "merged" database. A single database:
 
-- requires some way to edit/delete items - at that point I'm essentially re-implementing a CRUD interface *again*
+- requires some way to edit/delete items - at that point I'm essentially re-implementing a CRUD interface _again_
 - makes it harder to merge them together ([I've tried](https://github.com/seanbreckenridge/calories-scripts/blob/master/calmerge))
 
 JSON isn't perfect but at least I can open it in vim and delete/edit some value. Since the JSON files are pretty-printed, its also pretty trivial to grep/duplicate items by copying a few lines around. Without writing a bunch of code, this seems like the least amount of friction to immediately create new interfaces

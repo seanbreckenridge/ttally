@@ -4,10 +4,6 @@ from typing import Any, NamedTuple, Type
 
 import click
 
-from .autotui_ext import prompt, prompt_now
-from .recent import query_print
-from .codegen import generate_shell_aliases
-from .json import save_from_stdin, glob_json
 from .models import MODELS
 
 
@@ -40,6 +36,8 @@ def generate() -> None:
     """
     Generate the aliases!
     """
+    from .codegen import generate_shell_aliases
+
     for a in generate_shell_aliases():
         print(a)
 
@@ -54,6 +52,8 @@ def from_json(model: str) -> None:
     (in lowercase) as the first argument, and this parses (validates)
     and saves it to the file
     """
+    from .json import save_from_stdin
+
     save_from_stdin(_model_from_string(model))
 
 
@@ -63,6 +63,8 @@ def _prompt(model: str) -> None:
     """
     Prompt for every field in the given model
     """
+    from .autotui_ext import prompt
+
     prompt(_model_from_string(model))
 
 
@@ -72,6 +74,8 @@ def _prompt_now(model: str) -> None:
     """
     Prompt for every field in the model, except datetime, which should default to now
     """
+    from .autotui_ext import prompt_now
+
     prompt_now(_model_from_string(model))
 
 
@@ -82,6 +86,8 @@ def _recent(model: str, count: int) -> None:
     """
     List recent items logged for this model
     """
+    from .recent import query_print
+
     query_print(_model_from_string(model), count)
 
 
@@ -92,6 +98,8 @@ def export(model: str, count: int) -> None:
     """
     List all the data from a model as JSON
     """
+    from .json import glob_json
+
     click.echo(json.dumps(glob_json(_model_from_string(model))))
 
 
