@@ -1,20 +1,20 @@
-# tupletally
+# ttally
 
 Interactive module using [`autotui`](https://github.com/seanbreckenridge/autotui) to save things I do often to JSON. Used as part of [`HPI`](https://github.com/seanbreckenridge/HPI)
 
-Given a `NamedTuple` (hence the name) defined in [`~/.config/tupletally.py`](https://sean.fish/d/tupletally.py), this creates interactive interfaces which validate my input to log information to JSON files
+Given a `NamedTuple` (hence the name) defined in [`~/.config/ttally.py`](https://sean.fish/d/ttally.py), this creates interactive interfaces which validate my input to log information to JSON files
 
 Currently, I use this to store info like whenever I drink water/shower/my current weight periodically
 
 ```
-Usage: tupletally [OPTIONS] COMMAND [ARGS]...
+Usage: ttally [OPTIONS] COMMAND [ARGS]...
 
   Tally things that I do often!
 
   Given a few namedtuples, this creates serializers/deserializers and an
   interactive interface using 'autotui', and aliases to:
 
-  prompt using default autotui behavior, writing to the tupletally datafile,
+  prompt using default autotui behavior, writing to the ttally datafile,
   same as above, but if the model has a datetime, set it to now, query the
   10 most recent items for a model
 
@@ -30,7 +30,7 @@ Commands:
   recent      List recent items logged for this model
 ```
 
-In other words, it converts this (the config file at `~/.config/tupletally.py`):
+In other words, it converts this (the config file at `~/.config/ttally.py`):
 
 ```python
 from datetime import datetime
@@ -53,25 +53,25 @@ class Water(NamedTuple):
 
 class Food(NamedTuple):
     when: datetime
-    food: str
     calories: int
+    food: str
 ```
 
 to...
 
 ```
-alias food='python3 -m tupletally prompt food'
-alias food-now='python3 -m tupletally prompt-now food'
-alias food-recent='python3 -m tupletally recent food'
-alias shower='python3 -m tupletally prompt shower'
-alias shower-now='python3 -m tupletally prompt-now shower'
-alias shower-recent='python3 -m tupletally recent shower'
-alias water='python3 -m tupletally prompt water'
-alias water-now='python3 -m tupletally prompt-now water'
-alias water-recent='python3 -m tupletally recent water'
-alias weight='python3 -m tupletally prompt weight'
-alias weight-now='python3 -m tupletally prompt-now weight'
-alias weight-recent='python3 -m tupletally recent weight'
+alias food='python3 -m ttally prompt food'
+alias food-now='python3 -m ttally prompt-now food'
+alias food-recent='python3 -m ttally recent food'
+alias shower='python3 -m ttally prompt shower'
+alias shower-now='python3 -m ttally prompt-now shower'
+alias shower-recent='python3 -m ttally recent shower'
+alias water='python3 -m ttally prompt water'
+alias water-now='python3 -m ttally prompt-now water'
+alias water-recent='python3 -m ttally recent water'
+alias weight='python3 -m ttally prompt weight'
+alias weight-now='python3 -m ttally prompt-now weight'
+alias weight-recent='python3 -m ttally recent weight'
 ```
 
 Whenever I run any of those aliases, it opens an interactive interface like this:
@@ -106,13 +106,13 @@ The `from-json` command can be used to send this JSON which matches a model, i.e
 
 ## Library Usage
 
-The whole point of this interface is that it validates my input to types, stores it as a basic editable format (JSON), but is still loadable into typed ADT-like Python objects, with minimal boilerplate. I just need to add a NamedTuple to `~/.config/tupletally.py`, and all the interfaces and resulting JSON files are generated.
+The whole point of this interface is that it validates my input to types, stores it as a basic editable format (JSON), but is still loadable into typed ADT-like Python objects, with minimal boilerplate. I just need to add a NamedTuple to `~/.config/ttally.py`, and all the interfaces and resulting JSON files are generated.
 
 To load the items into python, you can do:
 
 ```python
-from tupletally.autotui_ext import glob_namedtuple
-from tupletally.config import Water
+from ttally.autotui_ext import glob_namedtuple
+from ttally.config import Water
 
 print(list(glob_namedtuple(Water)))
 ```
@@ -122,25 +122,27 @@ See [`here`](https://github.com/seanbreckenridge/HPI/blob/master/my/body.py) for
 ## Installation
 
 ```bash
-pip install 'git+https://github.com/seanbreckenridge/tupletally'
+pip install 'git+https://github.com/seanbreckenridge/ttally'
 ```
 
 ### Configuration
 
-You need to setup a `~/.config/tupletally.py` file. You can use the block above as a starting point, or with mine:
+You need to setup a `~/.config/ttally.py` file. You can use the block above as a starting point, or with mine:
 
 ```bash
-curl -s 'https://sean.fish/d/tupletally.py' > ~/.config/tupletally.py
+curl -s 'https://sean.fish/d/ttally.py' > ~/.config/ttally.py
 ```
 
-You can set the `TUPLETALLY_DATA_DIR` environment variable to the directory that `tupletally` should save data to, defaults to `~/.local/share/tupletally`. If you want to use a different path for configuration, you can set the `TUPLETALLY_CFG` to the absolute path to the file.
+You can set the `TTALLY_DATA_DIR` environment variable to the directory that `ttally` should save data to, defaults to `~/.local/share/ttally`. If you want to use a different path for configuration, you can set the `TTALLY_CFG` to the absolute path to the file.
 
 I cache the generated aliases by putting a block like this in my shell config (i.e. it runs the first time I start a terminal, but then stays the same until I remove the file/my computer restarts):
 
 ```bash
-TUPLETALLY_ALIASES='/tmp/tupletally_aliases'
-if [[ ! -e "${TUPLETALLY_ALIASES}" ]]; then
-  python3 -m tupletally generate >"${TUPLETALLY_ALIASES}"
+TTALLY_ALIASES="${HOME}/.cache/ttally_aliases"
+if [[ ! -e "${TTALLY_ALIASES}" ]]; then
+	if havecmd ttally; then
+		python3 -m ttally generate >"${TTALLY_ALIASES}"
+	fi
 fi
-source "${TUPLETALLY_ALIASES}"
+[[ -e "${TTALLY_ALIASES}" ]] && source "${TTALLY_ALIASES}"
 ```

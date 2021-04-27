@@ -15,12 +15,12 @@ OS = sys.platform.casefold()
 # https://docs.python.org/3/library/os.html#os.uname
 HOSTNAME = "".join(socket.gethostname().split()).casefold()
 TIMESTAMP = datetime.strftime(datetime.now(), "%Y-%m")
-ENV = "TUPLETALLY_DATA_DIR"
-DEFAULT_DATA = "~/.local/share/tupletally"
+ENV = "TTALLY_DATA_DIR"
+DEFAULT_DATA = "~/.local/share/ttally"
 
 
 @lru_cache(1)
-def tupletally_abs() -> Path:
+def ttally_abs() -> Path:
     ddir: str = os.environ.get(ENV, DEFAULT_DATA)
     p = Path(ddir).expanduser().absolute()
     if not p.exists():
@@ -36,10 +36,10 @@ def datafile(for_function: str, in_dir: Optional[Path] = None) -> Path:
     # this also decreases the amount of items that have
     # to be loaded into memory for load_prompt_and_writeback
     unique_path = f"{for_function}-{OS}-{HOSTNAME}-{TIMESTAMP}.json"
-    return Path(in_dir or tupletally_abs()).absolute() / unique_path
+    return Path(in_dir or ttally_abs()).absolute() / unique_path
 
 
 # globs all datafiles for some for_function
 def glob_datafiles(for_function: str, in_dir: Optional[Path] = None) -> List[Path]:
-    d: Path = Path(in_dir or tupletally_abs()).absolute()
+    d: Path = Path(in_dir or ttally_abs()).absolute()
     return list(map(Path, glob.glob(str(d / f"{for_function}*.json"))))

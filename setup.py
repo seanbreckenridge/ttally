@@ -4,11 +4,11 @@ from setuptools import setup, find_packages
 long_description = Path("README.md").read_text()
 reqs = Path("requirements.txt").read_text().strip().splitlines()
 
-pkg = "tupletally"
+pkg = "ttally"
 setup(
     name=pkg,
     version="0.1.0",
-    url="https://github.com/seanbreckenridge/tupletally",
+    url="https://github.com/seanbreckenridge/ttally",
     author="Sean Breckenridge",
     author_email="seanbrecke@gmail.com",
     description=(
@@ -21,7 +21,7 @@ setup(
     install_requires=reqs,
     package_data={pkg: ["py.typed"]},
     keywords="",
-    entry_points={"console_scripts": ["tupletally = tupletally.__main__:main"]},
+    entry_points={"console_scripts": ["ttally = ttally.__main__:main"]},
     extras_require={
         "testing": [
             "mypy",

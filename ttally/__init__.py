@@ -6,11 +6,11 @@ import warnings
 import importlib.util
 from pathlib import Path
 
-URL = "https://github.com/seanbreckenridge/tupletally"
+URL = "https://github.com/seanbreckenridge/ttally"
 
 
 def get_conf_file() -> Path:
-    cfg_file: str = os.environ.get("TUPLETALLY_CFG", "~/.config/tupletally.py")
+    cfg_file: str = os.environ.get("TTALLY_CFG", "~/.config/ttally.py")
     cfg_path = Path(cfg_file).expanduser().absolute()
     if not cfg_path.parent.exists():
         warnings.warn("Directory for configuration doesn't exist, creating...")
@@ -26,7 +26,7 @@ def setup_config() -> None:
     conf: Path = get_conf_file()
     sconf: str = str(conf)
 
-    mname = "tupletally.config"
+    mname = "ttally.config"
     # redirect import
     if mname in sys.modules:
         del sys.modules[mname]
@@ -40,12 +40,12 @@ def setup_config() -> None:
         spec.loader.exec_module(mod)  # type: ignore[attr-defined]
         if mname not in sys.modules:
             sys.modules[mname] = mod
-        import tupletally.config  # make sure its importable
+        import ttally.config  # make sure its importable
     except ImportError as e:
         raise ImportError(
             f"""
-Importing 'tupletally.config' failed! (error: {e}).
-This file is typically located at  ~/.config/tupletally.py, see {URL} for
+Importing 'ttally.config' failed! (error: {e}).
+This file is typically located at  ~/.config/ttally.py, see {URL} for
 more information
 """
         )

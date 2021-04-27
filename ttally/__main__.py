@@ -28,7 +28,7 @@ def main() -> None:
     and an interactive interface using 'autotui', and aliases
     to:
 
-    prompt using default autotui behavior, writing to the tupletally datafile,
+    prompt using default autotui behavior, writing to the ttally datafile,
     same as above, but if the model has a datetime, set it to now,
     query the 10 most recent items for a model
     """
@@ -96,4 +96,4 @@ def export(model: str, count: int) -> None:
 
 
 if __name__ == "__main__":
-    main(prog_name="tupletally")
+    main(prog_name="ttally")

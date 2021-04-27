@@ -5,7 +5,7 @@ from typing import Any, Dict, NamedTuple, Type
 # should already be configured, since __init__.py hook runs
 # when the module is initially loaded
 
-from tupletally import config
+from ttally import config
 
 
 def _is_model(o: Any) -> bool:
