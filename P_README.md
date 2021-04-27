@@ -9,7 +9,7 @@ cat ~/.config/ttally.py
 perl -E 'print "`"x3, "\n"'
 ```
 
-to...
+to (shell aliases)...
 
 ```
 >>>PMARK

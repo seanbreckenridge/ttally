@@ -27,7 +27,7 @@ class Food(NamedTuple):
     food: str
 ```
 
-to...
+to (shell aliases)...
 
 ```
 alias food='python3 -m ttally prompt food'
