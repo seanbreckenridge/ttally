@@ -2,7 +2,7 @@
 
 Interactive module using [`autotui`](https://github.com/seanbreckenridge/autotui) to save things I do often to JSON. Used as part of [`HPI`](https://github.com/seanbreckenridge/HPI)
 
-Given a `NamedTuple` (hence the name) defined in [`~/.config/ttally.py`](https://sean.fish/d/ttally.py), this creates interactive interfaces which validate my input to log information to JSON files
+Given a `NamedTuple` defined in [`~/.config/ttally.py`](https://sean.fish/d/ttally.py), this creates interactive interfaces which validate my input to log information to JSON files
 
 Currently, I use this to store info like whenever I drink water/shower/my current weight periodically
 
