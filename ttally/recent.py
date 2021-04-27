@@ -3,7 +3,8 @@ from datetime import datetime
 
 import more_itertools
 
-from .autotui_ext import glob_namedtuple, namedtuple_extract_from_annotation
+from .autotui_ext import glob_namedtuple
+from .common import namedtuple_extract_from_annotation
 
 
 def _extract_dt_from(nt: Type[NamedTuple]) -> Callable[[NamedTuple], datetime]:
@@ -27,7 +28,10 @@ def query_print(nt: Type[NamedTuple], count: int) -> None:
     # we have nothing to sort by
     res: Iterator[NamedTuple] = iter(query_recent(nt, count))
     res = more_itertools.peekable(res)
-    first_item = res.peek()  # namedtuple-like
+    try:
+        first_item = res.peek()  # namedtuple-like
+    except StopIteration:
+        raise RuntimeError(f"data queried from {nt} was empty")
     dt_attr: str = namedtuple_extract_from_annotation(first_item.__class__, datetime)
     # get non-datetime attr names
     other_attrs: List[str] = [k for k in first_item._asdict().keys() if k != dt_attr]

@@ -52,7 +52,7 @@ def from_json(model: str) -> None:
     (in lowercase) as the first argument, and this parses (validates)
     and saves it to the file
     """
-    from .json import save_from_stdin
+    from .autotui_ext import save_from_stdin
 
     save_from_stdin(_model_from_string(model))
 
@@ -94,13 +94,27 @@ def _recent(model: str, count: int) -> None:
 @main.command()
 @click.argument("MODEL")
 @click.argument("COUNT", type=int, default=10)
-def export(model: str, count: int) -> None:
+@click.option(
+    "-s",
+    "--stream",
+    default=False,
+    is_flag=True,
+    help="Stream objects as they're read, instead of a list",
+)
+def export(model: str, count: int, stream: bool) -> None:
     """
     List all the data from a model as JSON
     """
     from .json import glob_json
 
-    click.echo(json.dumps(glob_json(_model_from_string(model))))
+    itr = glob_json(_model_from_string(model))
+
+    if stream:
+        for blob in itr:
+            sys.stdout.write(json.dumps(blob))
+            sys.stdout.write("\n")
+    else:
+        sys.stdout.write(json.dumps(list(itr)))
 
 
 if __name__ == "__main__":
