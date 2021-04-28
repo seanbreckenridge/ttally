@@ -57,6 +57,22 @@ def from_json(model: str) -> None:
     save_from_stdin(_model_from_string(model))
 
 
+@main.command()
+@click.argument("MODEL")
+def datafile(model: str) -> None:
+    """
+    Print the location of the current datafile for some model
+    """
+    from .file import datafile as df
+
+    m = model.lower()
+    assert m in MODELS, f"Couldn't find model {m}"
+    f = df(m)
+    if not f.exists():
+        click.echo(f"Warning: {f} doesn't exist", err=True)
+    click.echo(f)
+
+
 @main.command(name="prompt")
 @click.argument("MODEL")
 def _prompt(model: str) -> None:

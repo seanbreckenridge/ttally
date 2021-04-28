@@ -140,6 +140,7 @@ Options:
   --help  Show this message and exit.
 
 Commands:
+  datafile    Print the location of the current datafile for some model
   export      List all the data from a model as JSON
   from-json   A way to allow external programs to save JSON data to the...
   generate    Generate the aliases!
