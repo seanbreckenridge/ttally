@@ -23,7 +23,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install '.'
-          pip intall mypy
+          pip install mypy
       - name: Run mypy
         run: |
           mypy ./ttally
