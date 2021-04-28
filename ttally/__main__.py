@@ -1,6 +1,6 @@
 import sys
 import json
-from typing import NamedTuple, Type
+from typing import NamedTuple, Type, Optional
 
 import click
 
@@ -44,7 +44,21 @@ def generate() -> None:
 
 @main.command()
 @click.argument("MODEL")
-def from_json(model: str) -> None:
+@click.option(
+    "-p",
+    "--partial",
+    default=False,
+    is_flag=True,
+    help="Allow partial input -- prompt any fields which arent provided",
+)
+@click.option(
+    "-f",
+    "--file",
+    default=None,
+    type=click.Path(exists=True),
+    help="Read from file instead of STDIN",
+)
+def from_json(model: str, partial: bool, file: Optional[str]) -> None:
     """
     A way to allow external programs to save JSON data to the current file for the model
 
@@ -52,9 +66,13 @@ def from_json(model: str) -> None:
     (in lowercase) as the first argument, and this parses (validates)
     and saves it to the file
     """
-    from .autotui_ext import save_from_stdin
+    from .autotui_ext import save_from
 
-    save_from_stdin(_model_from_string(model))
+    if file is None:
+        save_from(_model_from_string(model), use_input=sys.stdin, partial=partial)
+    else:
+        with open(file, "r") as f:
+            save_from(_model_from_string(model), use_input=f, partial=partial)
 
 
 @main.command()

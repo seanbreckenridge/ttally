@@ -22,6 +22,7 @@ setup(
     package_data={pkg: ["py.typed"]},
     keywords="",
     entry_points={"console_scripts": ["ttally = ttally.__main__:main"]},
+    scripts=["bin/cz"],
     extras_require={
         "testing": [
             "mypy",
