@@ -23,11 +23,6 @@ setup(
     keywords="",
     entry_points={"console_scripts": ["ttally = ttally.__main__:main"]},
     scripts=["bin/cz"],
-    extras_require={
-        "testing": [
-            "mypy",
-        ]
-    },
     classifiers=[
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python",
