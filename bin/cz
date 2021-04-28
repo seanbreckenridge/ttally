@@ -5,6 +5,31 @@
 # prompts me with fzf to pick something from my 'food'
 # pass the '-d' flag to prompt for datetime using autotui
 
+declare script_name='cz'
+
+havecmd() {
+	local BINARY ERRMSG
+	# error if first argument isn't provided
+	BINARY="${1:?Must provide command to check}"
+	# the commend exists, exit with 0 (success!)
+	if command -v "${BINARY}" >/dev/null 2>&1; then
+		return 0
+	else
+		# construct error message
+		ERRMSG="'${script_name}' requires '${BINARY}', could not find that on your \$PATH"
+		if [[ -n "$2" ]]; then
+			ERRMSG="${ERRMSG}. $2"
+		fi
+		printf '%s\n' "${ERRMSG}" 1>&2
+		return 1
+	fi
+}
+
+set -e
+havecmd jq
+havecmd awk
+set +e
+
 with_date() {
 	local JSON_DATA
 	JSON_DATA="$(jq -n \
@@ -40,7 +65,7 @@ main() {
 			;;
 		h)
 			printf 'Usage: cz [-h] [-d]\n'
-			printf 'prompts me with fzf to pick something from my food\n'
+			printf 'prompts me with fzf to pick something from my food to add again\n'
 			printf '\t-h\tShow help message\n'
 			printf '\t-d\tPrompt for the datetime\n'
 			exit 0
@@ -48,7 +73,8 @@ main() {
 		*)
 			printf 'Unknown argument: %s\n' "${opt}"
 			exit 1
-	esac
+			;;
+		esac
 	done
 
 	shift "$((OPTIND - 1))"
