@@ -3,7 +3,7 @@
 # to work on my own calories system
 #
 # prompts me with fzf to pick something from my 'food'
-# pass the '-n' flag to prompt for datetime using autotui
+# pass the '-d' flag to prompt for datetime using autotui
 
 with_date() {
 	local JSON_DATA
@@ -33,10 +33,25 @@ main() {
 
 	# prompt for datetime instead
 	USE_NOW='1'
-	if [[ "$1" == "--not-now" || "$1" == '-n' ]]; then
-		USE_NOW='0'
-		shift
-	fi
+	while getopts "dh" opt; do
+		case "${opt}" in
+		d)
+			USE_NOW='0'
+			;;
+		h)
+			printf 'Usage: cz [-h] [-d]\n'
+			printf 'prompts me with fzf to pick something from my food\n'
+			printf '\t-h\tShow help message\n'
+			printf '\t-d\tPrompt for the datetime\n'
+			exit 0
+			;;
+		*)
+			printf 'Unknown argument: %s\n' "${opt}"
+			exit 1
+	esac
+	done
+
+	shift "$((OPTIND - 1))"
 
 	SELECTED="$(python3 -m ttally export food --stream | jq -r '"\(.calories)|\(.food)"' | awk '!seen[$0]++' |
 		fzf -q "$*" --header="What to add to calories?")" || {
