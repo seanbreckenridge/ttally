@@ -149,6 +149,7 @@ def export(model: str, count: int, stream: bool) -> None:
             sys.stdout.write("\n")
     else:
         sys.stdout.write(json.dumps(list(itr)))
+    sys.stdout.flush()
 
 
 if __name__ == "__main__":
