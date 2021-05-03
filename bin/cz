@@ -87,7 +87,7 @@ main() {
 	# split into array
 	readarray -d "|" -t CHOSEN <<<"${SELECTED}"
 	if [[ "${#CHOSEN[@]}" != 2 ]]; then
-		printf "Error splitting '%s' into two elements, food description can't contain the pipe '|' character\n" "$SELECTED" 1>&2
+		printf "Error splitting '%s' into two elements, food description can't contain the pipe '|' character\n" "${SELECTED}" 1>&2
 		return 1
 	fi
 
@@ -95,9 +95,9 @@ main() {
 	CALS="${CHOSEN[0]}"
 	FOODNAME="${CHOSEN[1]/$'\n'/}"
 	if ((USE_NOW == 0)); then
-		without_date "$CALS" "$FOODNAME" || return $?
+		without_date "${CALS}" "${FOODNAME}" || return $?
 	else
-		with_date "$CALS" "$FOODNAME" || return $?
+		with_date "${CALS}" "${FOODNAME}" || return $?
 	fi
 	python3 -m ttally recent food
 }
