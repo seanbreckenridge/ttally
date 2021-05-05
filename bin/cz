@@ -4,8 +4,23 @@
 #
 # prompts me with fzf to pick something from my 'food'
 # pass the '-d' flag to prompt for datetime using autotui
+#
+# this works both in the terminal and when called as an
+# 'application' from rofi/keybinding, assuming
+# you have the following on your $PATH:
+#
+# https://sean.fish/d/cross-platform/notify
+# https://sean.fish/d/picker
+#
+# otherwise falls back to default terminal behaviour
+# if being run from the terminal
 
-declare script_name='cz'
+# i.e. on a terminal
+declare ON_TTY=1
+hash tty 2>/dev/null && [[ "$(tty)" == "not a tty" ]] && ON_TTY=0
+declare -rx ON_TTY
+
+readonly script_name='cz'
 
 havecmd() {
 	local BINARY ERRMSG
@@ -20,7 +35,7 @@ havecmd() {
 		if [[ -n "$2" ]]; then
 			ERRMSG="${ERRMSG}. $2"
 		fi
-		printf '%s\n' "${ERRMSG}" 1>&2
+		ttally-say "${ERRMSG}" 1>&2
 		return 1
 	fi
 }
@@ -52,6 +67,19 @@ without_date() {
 	rm "${TEMPFILE}"
 }
 
+# pick using fzf if on a terminal, or https://sean.fish/d/picker if run with a keybinding
+pick() {
+	local PROMPT_MSG
+	PROMPT_MSG='What to add to calories?'
+	if ! ((ON_TTY)); then
+		if hash picker 2>/dev/null; then
+			picker -p "${PROMPT_MSG}  " || return $?
+			return
+		fi
+	fi
+	fzf -q "$*" --header="${PROMPT_MSG}" || return $?
+}
+
 main() {
 	local SELECTED USE_NOW
 	local -a CHOSEN
@@ -79,18 +107,20 @@ main() {
 
 	shift "$((OPTIND - 1))"
 
-	SELECTED="$(python3 -m ttally export food --stream | jq -r '"\(.calories)|\(.food)"' | awk '!seen[$0]++' |
-		fzf -q "$*" --header="What to add to calories?")" || {
-		echo "Didn't select anything to add to calories..." 1>&2
+	# pick an item using fzf/rofi/choose-gui
+	SELECTED="$(python3 -m ttally export food --stream | jq -r '"\(.calories)|\(.food)"' | awk '!seen[$0]++' | pick "$@")" || {
+		ttally-say "Didn't select anything to add to calories..." 1>&2
 		return 1
 	}
+
 	# split into array
 	readarray -d "|" -t CHOSEN <<<"${SELECTED}"
 	if [[ "${#CHOSEN[@]}" != 2 ]]; then
-		printf "Error splitting '%s' into two elements, food description can't contain the pipe '|' character\n" "${SELECTED}" 1>&2
+		ttally-say "Error splitting '${SELECTED}' into two elements, food description can't contain the pipe '|' character" 1>&2
 		return 1
 	fi
 
+	# add item to food
 	local CALS FOODNAME
 	CALS="${CHOSEN[0]}"
 	FOODNAME="${CHOSEN[1]/$'\n'/}"
@@ -99,7 +129,9 @@ main() {
 	else
 		with_date "${CALS}" "${FOODNAME}" || return $?
 	fi
-	python3 -m ttally recent food
+
+	# print recent items so I can review
+	ttally-say "$(python3 -m ttally recent food)"
 }
 
 main "$@" || exit $?
