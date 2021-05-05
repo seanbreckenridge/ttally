@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-set -e
-ttally-say "$(python3 -m ttally recent food "$@")"
