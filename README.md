@@ -170,3 +170,22 @@ if [[ ! -e "${TTALLY_ALIASES}" ]]; then  # alias file doesn't exist
 fi
 [[ -e "${TTALLY_ALIASES}" ]] && source "${TTALLY_ALIASES}"  # if the file exists, make the aliases available
 ```
+
+### Shell Scripts
+
+[`bin`](bin/) contains a few shell scripts I use for reference:
+
+[`cz`](bin/cz) lets me fuzzy select something I've eaten in the past, in the console or using `rofi`, like:
+
+![](https://raw.githubusercontent.com/seanbreckenridge/calories-fzf/master/demo.gif)
+
+![](https://raw.githubusercontent.com/seanbreckenridge/ttally/master/.github/cz_rofi.png)
+
+[`wn`](bin/wn) is used as a helper script to add water amounts I commonly add [using a i3 mode](https://github.com/seanbreckenridge/dotfiles/commit/5b0943507593fee7c59bf337ae2f16500731e140), which looks something like this:
+
+![](https://raw.githubusercontent.com/seanbreckenridge/ttally/master/.github/water_notifications.png)
+
+The first notification maps 'number key' -> 'number of glasses to add', ordered by how often I add that amount of water (which is computed by doing some data wrangling; `python3 -m ttally export water --stream | jq '.glasses' | sort -n | uniq -c | chomp | sort -rn | cut -d' ' -f2 | head -n9`)
+
+In other words, I hit `mod (windows) key + w` to send the first notification and launch the mode, then hit something like `1` or `2` depending on how many glasses I want to add, which then uses the `from-json` command to save info into my data files.
+
