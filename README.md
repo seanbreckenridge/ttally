@@ -65,7 +65,7 @@ Whenever I run any of those aliases, it inspects the model in the config file, d
 
 Currently, I use this to store info like whenever I eat something/drink water/shower/my current weight periodically
 
-Given a `NamedTuple` defined in [`~/.config/ttally.py`](https://sean.fish/d/ttally.py), this creates interactive interfaces which validate my input to save information to JSON files
+Given a `NamedTuple` defined in [`~/.config/ttally.py`](https://sean.fish/d/ttally.py?dark), this creates interactive interfaces which validate my input to save information to JSON files
 
 The `{tuple}-now` aliases set the any `datetime` values for the prompted tuple to now
 
