@@ -173,7 +173,7 @@ fi
 
 ### Shell Scripts
 
-[`bin`](bin/) contains a few shell scripts I use for reference:
+[`bin`](bin/) contains a few relatively personal shell scripts I use for reference:
 
 [`cz`](bin/cz) lets me fuzzy select something I've eaten in the past, in the console or using `rofi`, like:
 
@@ -188,4 +188,3 @@ fi
 The first notification maps 'number key' -> 'number of glasses to add', ordered by how often I add that amount of water (which is computed by doing some data wrangling; `python3 -m ttally export water --stream | jq '.glasses' | sort -n | uniq -c | chomp | sort -rn | cut -d' ' -f2 | head -n9`)
 
 In other words, I hit `mod (windows) key + w` to send the first notification and launch the mode, then hit something like `1` or `2` depending on how many glasses I want to add, which then uses the `from-json` command to save info into my data files.
-

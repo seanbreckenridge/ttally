@@ -5,21 +5,21 @@
 # prompts me with fzf to pick something from my 'food'
 # pass the '-d' flag to prompt for datetime using autotui
 #
+# pass the -p flag to prompt in the background
+#
 # this works both in the terminal and when called as an
 # 'application' from rofi/keybinding, assuming
 # you have the following on your $PATH:
 #
+# https://sean.fish/d/cross-platform/attached-to-terminal
+# https://sean.fish/d/cross-platform/print-or-notify
 # https://sean.fish/d/cross-platform/notify
 # https://sean.fish/d/picker
 #
 # otherwise falls back to default terminal behaviour
 # if being run from the terminal
 
-# i.e. on a terminal
-declare ON_TTY=1
-hash tty 2>/dev/null && [[ "$(tty)" == "not a tty" ]] && ON_TTY=0
-declare -rx ON_TTY
-
+declare GUI_PROMPT='0'
 readonly script_name='cz'
 
 havecmd() {
@@ -35,7 +35,7 @@ havecmd() {
 		if [[ -n "$2" ]]; then
 			ERRMSG="${ERRMSG}. $2"
 		fi
-		ttally-say "${ERRMSG}" 1>&2
+		printf '%s\n' "${ERRMSG}" 1>&2
 		return 1
 	fi
 }
@@ -43,6 +43,7 @@ havecmd() {
 set -e
 havecmd jq
 havecmd awk
+havecmd print-or-notify 'Uses my cross platform scripts here https://github.com/seanbreckenridge/dotfiles/tree/master/.local/scripts/cross-platform. Could remove the print-or-notify calls here to just be "echo" instead'
 set +e
 
 with_date() {
@@ -71,8 +72,8 @@ without_date() {
 pick() {
 	local PROMPT_MSG
 	PROMPT_MSG='What to add to calories?'
-	if ! ((ON_TTY)); then
-		if hash picker 2>/dev/null; then
+	if hash picker 2>/dev/null; then
+		if ((GUI_PROMPT)); then
 			picker -p "${PROMPT_MSG}  " || return $?
 			return
 		fi
@@ -86,16 +87,20 @@ main() {
 
 	# prompt for datetime instead
 	USE_NOW='1'
-	while getopts "dh" opt; do
+	while getopts "pdh" opt; do
 		case "${opt}" in
+		p)
+			GUI_PROMPT='1'
+			;;
 		d)
 			USE_NOW='0'
 			;;
 		h)
-			printf 'Usage: cz [-h] [-d]\n'
+			printf 'Usage: cz [-h] [-p] [-d]\n'
 			printf 'prompts me with fzf to pick something from my food to add again\n'
 			printf '\t-h\tShow help message\n'
 			printf '\t-d\tPrompt for the datetime\n'
+			printf '\t-p\tPrompt using my GUI scripts\n'
 			exit 0
 			;;
 		*)
@@ -109,14 +114,14 @@ main() {
 
 	# pick an item using fzf/rofi/choose-gui
 	SELECTED="$(python3 -m ttally export food --stream | jq -r '"\(.calories)|\(.food)"' | awk '!seen[$0]++' | pick "$@")" || {
-		ttally-say "Didn't select anything to add to calories..." 1>&2
+		print-or-notify "Didn't select anything to add to calories..." 1>&2
 		return 1
 	}
 
 	# split into array
 	readarray -d "|" -t CHOSEN <<<"${SELECTED}"
 	if [[ "${#CHOSEN[@]}" != 2 ]]; then
-		ttally-say "Error splitting '${SELECTED}' into two elements, food description can't contain the pipe '|' character" 1>&2
+		print-or-notify "Error splitting '${SELECTED}' into two elements, food description can't contain the pipe '|' character" 1>&2
 		return 1
 	fi
 
@@ -131,7 +136,7 @@ main() {
 	fi
 
 	# print recent items so I can review
-	ttally-say "$(python3 -m ttally recent food)"
+	print-or-notify "$(python3 -m ttally recent food)"
 }
 
 main "$@" || exit $?

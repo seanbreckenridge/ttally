@@ -12,10 +12,25 @@
 # I call this using an i3 mode launcher:
 # https://github.com/seanbreckenridge/dotfiles/commit/5b0943507593fee7c59bf337ae2f16500731e140
 
-# i.e. on a terminal
-declare ON_TTY=1
-hash tty 2>/dev/null && [[ "$(tty)" == "not a tty" ]] && ON_TTY=0
-declare -rx ON_TTY
+readonly script_name='wn'
+
+havecmd() {
+	local BINARY ERRMSG
+	# error if first argument isn't provided
+	BINARY="${1:?Must provide command to check}"
+	# the commend exists, exit with 0 (success!)
+	if command -v "${BINARY}" >/dev/null 2>&1; then
+		return 0
+	else
+		# construct error message
+		ERRMSG="'${script_name}' requires '${BINARY}', could not find that on your \$PATH"
+		if [[ -n "$2" ]]; then
+			ERRMSG="${ERRMSG}. $2"
+		fi
+		printf '%s\n' "${ERRMSG}" 1>&2
+		return 1
+	fi
+}
 
 set -e
 havecmd jq
@@ -53,7 +68,7 @@ main() {
 	local GLASSES
 	GLASSES="${1:-1}"
 
-	ttally-say "[water] adding ${GLASSES}"
+	print-or-notify "[water] adding ${GLASSES}"
 
 	# construct JSON and send it to ttally to add to the file
 	local JSON_DATA
@@ -64,7 +79,7 @@ main() {
 	python3 -m ttally from-json water <<<"${JSON_DATA}" || return $?
 
 	# print recent items so I can review
-	ttally-say "$(python3 -m ttally recent water)"
+	print-or-notify "$(python3 -m ttally recent water)"
 }
 
 main "$@" || exit $?
