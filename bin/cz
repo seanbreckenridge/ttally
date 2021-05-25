@@ -43,6 +43,7 @@ havecmd() {
 set -e
 havecmd jq
 havecmd awk
+havecmd chomp 'Install from https://github.com/seanbreckenridge/chomp'
 havecmd print-or-notify 'Uses my cross platform scripts here https://github.com/seanbreckenridge/dotfiles/tree/master/.local/scripts/cross-platform. Could remove the print-or-notify calls here to just be "echo" instead'
 set +e
 
@@ -113,7 +114,7 @@ main() {
 	shift "$((OPTIND - 1))"
 
 	# pick an item using fzf/rofi/choose-gui
-	SELECTED="$(python3 -m ttally export food --stream | jq -r '"\(.calories)|\(.food)"' | awk '!seen[$0]++' | pick "$@")" || {
+	SELECTED="$(python3 -m ttally export food --stream | jq -r '"\(.calories)|\(.food)"' | sort | uniq -c | sort -n | chomp | cut -d' ' -f2- | tac | pick "$@")" || {
 		print-or-notify "Didn't select anything to add to calories..." 1>&2
 		return 1
 	}
