@@ -114,7 +114,7 @@ main() {
 	shift "$((OPTIND - 1))"
 
 	# pick an item using fzf/rofi/choose-gui
-	SELECTED="$(python3 -m ttally export food --stream | jq -r '"\(.calories)|\(.food)"' | sort | uniq -c | sort -n | chomp | cut -d' ' -f2- | tac | pick "$@")" || {
+	SELECTED="$(python3 -m ttally export food --stream | jq -r '"\(.calories)|\(.food)"' | sort | uniq -c | sort -rn | chomp | cut -d' ' -f2- | pick "$@")" || {
 		print-or-notify "Didn't select anything to add to calories..." 1>&2
 		return 1
 	}
