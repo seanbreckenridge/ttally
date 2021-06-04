@@ -26,8 +26,7 @@ def query_recent(nt: Type[NamedTuple], count: int) -> List[NamedTuple]:
 def query_print(nt: Type[NamedTuple], count: int) -> None:
     # assumes that there is a datetime attribute on this, else
     # we have nothing to sort by
-    res: Iterator[NamedTuple] = iter(query_recent(nt, count))
-    res = more_itertools.peekable(res)
+    res = more_itertools.peekable(iter(query_recent(nt, count)))
     try:
         first_item = res.peek()  # namedtuple-like
     except StopIteration:
