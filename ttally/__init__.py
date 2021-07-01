@@ -32,6 +32,7 @@ def setup_config() -> None:
         del sys.modules[mname]
     try:
         spec = importlib.util.spec_from_file_location(mname, sconf)
+        assert spec is not None
         mod = importlib.util.module_from_spec(spec)
         err = "Error importing configuration, must be on python3.5+?"
         assert spec.loader is not None, err
