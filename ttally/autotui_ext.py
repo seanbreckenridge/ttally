@@ -1,4 +1,5 @@
 import json
+import warnings
 from pathlib import Path
 from datetime import datetime
 from typing import NamedTuple, Iterator, Optional, Type, List, Dict, Any, Set, TextIO
@@ -45,13 +46,13 @@ def save_from(nt: Type[NamedTuple], use_input: TextIO, partial: bool = False) ->
     new_items: List[NamedTuple] = []
     if partial:
         # load the list as json blobs
-        json_obj: List[Dict[str, Any]] = json.loads(json_blob)
-        nt_fields: Set[str] = set(inspect_signature_dict(nt).keys())
-        # for each blob (typically only one)
-        for blob in json_obj:
-            for k in blob.keys():
-                assert k in nt_fields, f"{k} not in {nt_fields} {nt}"
-            new_nt = prompt_namedtuple(nt, attr_use_values=blob)
+        blobs: List[Dict[str, Any]] = []
+        with warnings.catch_warnings():  # ignore autotui null warnings
+            warnings.filterwarnings("ignore", category=UserWarning)
+            for b in namedtuple_sequence_loads(json_blob, nt):
+                blobs.append({k: v for k, v in b._asdict().items() if v is not None})
+        for bd in blobs:
+            new_nt = prompt_namedtuple(nt, attr_use_values=bd)
             new_items.append(new_nt)
     else:
         new_items.extend(namedtuple_sequence_loads(json_blob, nt))

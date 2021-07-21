@@ -53,8 +53,12 @@ with_date() {
 		--arg TIMESTAMP "$(date '+%s')" \
 		--arg CALORIES "$1" \
 		--arg FOODNAME "$2" \
-		'[{"when":$TIMESTAMP | tonumber, "food": $FOODNAME, "calories": $CALORIES | tonumber}]')" || return $?
-	python3 -m ttally from-json food <<<"${JSON_DATA}"
+		--arg WATER "$3" \
+		'[{"when" :$TIMESTAMP | tonumber, "food": $FOODNAME, "calories": $CALORIES | tonumber, "water": $WATER | tonumber}]')" || return $?
+	TEMPFILE="$(mktemp)"
+	printf '%s' "${JSON_DATA}" >"${TEMPFILE}"
+	python3 -m ttally from-json --partial food --file "${TEMPFILE}"
+	rm "${TEMPFILE}"
 }
 
 without_date() {
@@ -62,7 +66,8 @@ without_date() {
 	JSON_DATA="$(jq -n \
 		--arg CALORIES "$1" \
 		--arg FOODNAME "$2" \
-		'[{"food": $FOODNAME, "calories": $CALORIES | tonumber}]')" || return $?
+		--arg WATER "$3" \
+		'[{"food": $FOODNAME, "calories": $CALORIES | tonumber, "water": $WATER | tonumber}]')" || return $?
 	TEMPFILE="$(mktemp)"
 	printf '%s' "${JSON_DATA}" >"${TEMPFILE}"
 	python3 -m ttally from-json --partial food --file "${TEMPFILE}" || return $?
@@ -114,26 +119,27 @@ main() {
 	shift "$((OPTIND - 1))"
 
 	# pick an item using fzf/rofi/choose-gui
-	SELECTED="$(python3 -m ttally export food --stream | jq -r '"\(.calories)|\(.food)"' | sort | uniq -c | sort -rn | chomp | cut -d' ' -f2- | pick "$@")" || {
+	SELECTED="$(python3 -m ttally export food --stream | jq -r '"\(.food)|\(.calories)|\(.water)"' | sort | uniq -c | sort -rn | chomp | cut -d' ' -f2- | pick "$@")" || {
 		print-or-notify "Didn't select anything to add to calories..." 1>&2
 		return 1
 	}
 
 	# split into array
 	readarray -d "|" -t CHOSEN <<<"${SELECTED}"
-	if [[ "${#CHOSEN[@]}" != 2 ]]; then
-		print-or-notify "Error splitting '${SELECTED}' into two elements, food description can't contain the pipe '|' character" 1>&2
+	if [[ "${#CHOSEN[@]}" != 3 ]]; then
+		print-or-notify "Error splitting '${SELECTED}' into three elements, food description can't contain the pipe '|' character" 1>&2
 		return 1
 	fi
 
 	# add item to food
 	local CALS FOODNAME
-	CALS="${CHOSEN[0]}"
-	FOODNAME="${CHOSEN[1]/$'\n'/}"
+	FOODNAME="${CHOSEN[0]}"
+	CALS="${CHOSEN[1]}"
+	WATER="${CHOSEN[2]/$'\n'/}"
 	if ((USE_NOW == 0)); then
-		without_date "${CALS}" "${FOODNAME}" || return $?
+		without_date "${CALS}" "${FOODNAME}" "${WATER}" || return $?
 	else
-		with_date "${CALS}" "${FOODNAME}" || return $?
+		with_date "${CALS}" "${FOODNAME}" "${WATER}" || return $?
 	fi
 
 	# print recent items so I can review
