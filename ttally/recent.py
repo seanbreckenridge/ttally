@@ -1,4 +1,4 @@
-from typing import Iterator, List, NamedTuple, Type, Callable
+from typing import List, NamedTuple, Type, Callable
 from datetime import datetime
 
 import more_itertools

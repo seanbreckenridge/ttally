@@ -1,13 +1,11 @@
-import json
-import warnings
+import os
 from pathlib import Path
 from datetime import datetime
-from typing import NamedTuple, Iterator, Optional, Type, List, Dict, Any, Set, TextIO
+from typing import NamedTuple, Iterator, Optional, Type, List, Dict, Any, TextIO
 from itertools import chain
 
 from autotui import namedtuple_sequence_loads, prompt_namedtuple
 from autotui.shortcuts import load_prompt_and_writeback, load_from, dump_to
-from autotui.typehelpers import inspect_signature_dict
 
 from .file import datafile, glob_datafiles
 from .common import namedtuple_func_name
@@ -46,11 +44,11 @@ def save_from(nt: Type[NamedTuple], use_input: TextIO, partial: bool = False) ->
     new_items: List[NamedTuple] = []
     if partial:
         # load the list as json blobs
+        os.environ["AUTOTUI_DISABLE_WARNINGS"] = "1"  # ignore null warnings
         blobs: List[Dict[str, Any]] = []
-        with warnings.catch_warnings():  # ignore autotui null warnings
-            warnings.filterwarnings("ignore", category=UserWarning)
-            for b in namedtuple_sequence_loads(json_blob, nt):
-                blobs.append({k: v for k, v in b._asdict().items() if v is not None})
+        for b in namedtuple_sequence_loads(json_blob, nt):
+            blobs.append({k: v for k, v in b._asdict().items() if v is not None})
+        del os.environ["AUTOTUI_DISABLE_WARNINGS"]
         for bd in blobs:
             new_nt = prompt_namedtuple(nt, attr_use_values=bd)
             new_items.append(new_nt)
