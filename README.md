@@ -1,8 +1,8 @@
 # ttally
 
-**TL;DR**: This converts this (config file at `~/.config/ttally.py`):
+**TL;DR**: This converts a file like this (config file at `~/.config/ttally.py`):
 
-```python
+```
 from datetime import datetime
 from typing import NamedTuple
 

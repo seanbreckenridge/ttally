@@ -1,12 +1,30 @@
 # ttally
 
-**TL;DR**: This converts this (config file at `~/.config/ttally.py`):
+**TL;DR**: This converts a file like this (config file at `~/.config/ttally.py`):
 
 ```
->>>PMARK
-perl -E 'print "`"x3, "python", "\n"'
-cat ~/.config/ttally.py
-perl -E 'print "`"x3, "\n"'
+from datetime import datetime
+from typing import NamedTuple
+
+
+class Shower(NamedTuple):
+    when: datetime
+
+
+class Weight(NamedTuple):
+    when: datetime
+    pounds: float
+
+
+# this also tracks water, either by attaching it
+# to the corresponding food, or by just adding
+# something with the text 'water'
+class Food(NamedTuple):
+    when: datetime
+    calories: int
+    food: str
+    quantity: float
+    water: int  # ml
 ```
 
 to (shell aliases)...
