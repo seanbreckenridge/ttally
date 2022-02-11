@@ -5,7 +5,7 @@
 ```
 >>>PMARK
 #!/usr/bin/env bash
-perl -E 'print "`"x3, "\n"'
+perl -E 'print "`"x3, "python", "\n"'
 cat ~/.config/ttally.py
 perl -E 'print "`"x3, "\n"'
 ```
@@ -137,8 +137,6 @@ fi
 
 ### Shell Scripts
 
-[`bin`](bin/) contains a few relatively personal shell scripts I use for reference:
-
-[`cz`](bin/cz) lets me fuzzy select something I've eaten in the past, in the console or using `rofi`, like:
+[`cz`](bin/cz) lets me fuzzy select something I've eaten in the past using [`fzf`](https://github.com/junegunn/fzf), like:
 
 ![](https://raw.githubusercontent.com/seanbreckenridge/calories-fzf/master/demo.gif)

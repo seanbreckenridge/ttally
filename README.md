@@ -2,7 +2,7 @@
 
 **TL;DR**: This converts a file like this (config file at `~/.config/ttally.py`):
 
-```
+```python
 # This defines some models for things I want to log often
 # which then generate into TUIs using:
 # https://github.com/seanbreckenridge/ttally
