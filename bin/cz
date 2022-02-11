@@ -4,22 +4,7 @@
 #
 # prompts me with fzf to pick something from my 'food'
 # pass the '-d' flag to prompt for datetime using autotui
-#
-# pass the -p flag to prompt in the background
-#
-# this works both in the terminal and when called as an
-# 'application' from rofi/keybinding, assuming
-# you have the following on your $PATH:
-#
-# https://sean.fish/d/cross-platform/attached-to-terminal
-# https://sean.fish/d/cross-platform/print-or-notify
-# https://sean.fish/d/cross-platform/notify
-# https://sean.fish/d/picker
-#
-# otherwise falls back to default terminal behaviour
-# if being run from the terminal
 
-declare GUI_PROMPT='0'
 readonly script_name='cz'
 
 havecmd() {
@@ -76,15 +61,7 @@ without_date() {
 
 # pick using fzf if on a terminal, or https://sean.fish/d/picker if run with a keybinding
 pick() {
-	local PROMPT_MSG
-	PROMPT_MSG='What to add to calories?'
-	if hash picker 2>/dev/null; then
-		if ((GUI_PROMPT)); then
-			picker -p "${PROMPT_MSG}  " || return $?
-			return
-		fi
-	fi
-	fzf -q "$*" --header="${PROMPT_MSG}" || return $?
+	fzf -q "$*" --header='What to add to calories?' || return $?
 }
 
 main() {
@@ -93,11 +70,8 @@ main() {
 
 	# prompt for datetime instead
 	USE_NOW='1'
-	while getopts "pdh" opt; do
+	while getopts "dh" opt; do
 		case "${opt}" in
-		p)
-			GUI_PROMPT='1'
-			;;
 		d)
 			USE_NOW='0'
 			;;
@@ -106,7 +80,6 @@ main() {
 			printf 'prompts me with fzf to pick something from my food to add again\n'
 			printf '\t-h\tShow help message\n'
 			printf '\t-d\tPrompt for the datetime\n'
-			printf '\t-p\tPrompt using my GUI scripts\n'
 			exit 0
 			;;
 		*)
