@@ -14,10 +14,17 @@ def namedtuple_extract_from_annotation(nt: Type[NamedTuple], _type: Any) -> str:
     'something'
     """
     import inspect
-    from autotui.typehelpers import strip_optional
+    from autotui.typehelpers import get_union_args
 
     for attr_name, param in inspect.signature(nt).parameters.items():
-        param_type, _ = strip_optional(param.annotation)
-        if param_type == _type:
+        attr_type = param.annotation
+        # Optional[(<class 'int'>, False)]
+        res = get_union_args(attr_type)
+        if res := get_union_args(attr_type):
+            attr_types, _ = res
+            assert len(attr_types) == 1
+            attr_type = attr_types[0]
+
+        if attr_type == _type:
             return attr_name
     raise TypeError(f"Could not find {_type} on {nt}")
