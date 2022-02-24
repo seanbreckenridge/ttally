@@ -41,7 +41,8 @@ def setup_config() -> None:
         spec.loader.exec_module(mod)  # type: ignore[attr-defined]
         if mname not in sys.modules:
             sys.modules[mname] = mod
-        import ttally.config  # make sure its importable
+        # make sure its importable
+        import ttally.config  # noqa
     except ImportError as e:
         raise ImportError(
             f"""

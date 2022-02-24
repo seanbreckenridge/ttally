@@ -1,6 +1,6 @@
 import sys
 import json
-from typing import NamedTuple, Type, Optional
+from typing import NamedTuple, Type, Optional, List, Sequence
 
 import click
 
@@ -42,8 +42,22 @@ def generate() -> None:
         print(a)
 
 
+def _model_names() -> List[str]:
+    # sort this, so that the order doesn't change while tabbing through
+    return sorted(m for m in MODELS)
+
+
+def _model_complete(
+    ctx: click.Context, args: Sequence[str], incomplete: str
+) -> List[str]:
+    return [m for m in _model_names() if m.startswith(incomplete)]
+
+
+model_with_completion = click.argument("MODEL", shell_complete=_model_complete)
+
+
 @main.command()
-@click.argument("MODEL")
+@model_with_completion
 @click.option(
     "-p",
     "--partial",
@@ -76,7 +90,7 @@ def from_json(model: str, partial: bool, file: Optional[str]) -> None:
 
 
 @main.command()
-@click.argument("MODEL")
+@model_with_completion
 def datafile(model: str) -> None:
     """
     Print the location of the current datafile for some model
@@ -92,7 +106,7 @@ def datafile(model: str) -> None:
 
 
 @main.command(name="prompt")
-@click.argument("MODEL")
+@model_with_completion
 def _prompt(model: str) -> None:
     """
     Prompt for every field in the given model
@@ -103,7 +117,7 @@ def _prompt(model: str) -> None:
 
 
 @main.command(name="prompt-now")
-@click.argument("MODEL")
+@model_with_completion
 def _prompt_now(model: str) -> None:
     """
     Prompt for every field in the model, except datetime, which should default to now
@@ -114,7 +128,7 @@ def _prompt_now(model: str) -> None:
 
 
 @main.command(name="recent")
-@click.argument("MODEL")
+@model_with_completion
 @click.argument("COUNT", type=int, default=10)
 def _recent(model: str, count: int) -> None:
     """
@@ -126,7 +140,7 @@ def _recent(model: str, count: int) -> None:
 
 
 @main.command()
-@click.argument("MODEL")
+@model_with_completion
 @click.argument("COUNT", type=int, default=10)
 @click.option(
     "-s",
