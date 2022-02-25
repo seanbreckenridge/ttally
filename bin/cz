@@ -56,7 +56,7 @@ main() {
 	SELECTED="$(fooditems | fzf -q "$*" --header='What to add to calories?')" || abort "Didn't select anything to add to calories...\n"
 
 	# split into array
-	readarray -d "|" -t CHOSEN <<<"${SELECTED/$'\n'/}"
+	readarray -d "|" -t CHOSEN <<<"${SELECTED/$'\n'/}" || abort 'Error splitting chosen line into parts'
 
 	# add item to food
 	[[ -z "${PROMPT_DATETIME}" ]] && WHEN="$(date +'%s')"
