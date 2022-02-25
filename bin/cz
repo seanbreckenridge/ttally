@@ -48,17 +48,12 @@ fooditems() {
 	} | awk '!seen[$0]++'
 }
 
-# pick using fzf if on a terminal, or https://sean.fish/d/picker if run with a keybinding
-pick() {
-	fzf -q "$*" --header='What to add to calories?' || return $?
-}
-
 main() {
 	local SELECTED WHEN
 	local -a CHOSEN
 
 	# pick an item using fzf
-	SELECTED="$(fooditems | pick "$@")" || abort "Didn't select anything to add to calories...\n"
+	SELECTED="$(fooditems | fzf -q "$*" --header='What to add to calories?')" || abort "Didn't select anything to add to calories...\n"
 
 	# split into array
 	readarray -d "|" -t CHOSEN <<<"${SELECTED/$'\n'/}"
