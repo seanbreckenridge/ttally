@@ -1,60 +1,42 @@
 #!/usr/bin/env bash
 # an adaption of https://github.com/seanbreckenridge/calories-scripts
-# to work on my own calories system
+# to work on ttally
 #
 # prompts me with fzf to pick something from my 'food'
 # pass the '-d' flag to prompt for datetime using autotui
 
-readonly script_name='cz'
+set -u
+
+abort() {
+	# shellcheck disable=SC2059
+	printf "$@" 1>&2
+	exit 1
+}
 
 havecmd() {
 	local BINARY ERRMSG
-	# error if first argument isn't provided
 	BINARY="${1:?Must provide command to check}"
-	# the commend exists, exit with 0 (success!)
-	if command -v "${BINARY}" >/dev/null 2>&1; then
-		return 0
-	else
-		# construct error message
-		ERRMSG="'${script_name}' requires '${BINARY}', could not find that on your \$PATH"
-		if [[ -n "$2" ]]; then
-			ERRMSG="${ERRMSG}. $2"
-		fi
-		printf '%s\n' "${ERRMSG}" 1>&2
-		return 1
-	fi
+	command -v "${BINARY}" >/dev/null 2>&1 || {
+		ERRMSG="cz requires '${BINARY}', could not find that on your \$PATH"
+		[[ -n "$2" ]] && ERRMSG="${ERRMSG}. $2"
+		abort '%s\n' "${ERRMSG}"
+	}
 }
 
-set -e
 havecmd jq
-havecmd awk
+havecmd fzf
 havecmd chomp 'Install from https://github.com/seanbreckenridge/chomp'
-havecmd print-or-notify 'Uses my cross platform scripts here https://github.com/seanbreckenridge/dotfiles/tree/master/.local/scripts/cross-platform. Could remove the print-or-notify calls here to just be "echo" instead'
-set +e
 
-with_date() {
-	local JSON_DATA
-	JSON_DATA="$(jq -n \
-		--arg TIMESTAMP "$(date '+%s')" \
-		--arg CALORIES "$1" \
-		--arg FOODNAME "$2" \
-		--arg WATER "$3" \
-		'[{"when" :$TIMESTAMP | tonumber, "food": $FOODNAME, "calories": $CALORIES | tonumber, "water": $WATER | tonumber}]')" || return $?
-	TEMPFILE="$(mktemp)"
-	printf '%s' "${JSON_DATA}" >"${TEMPFILE}"
-	python3 -m ttally from-json --partial food --file "${TEMPFILE}"
-	rm "${TEMPFILE}"
-}
-
-without_date() {
+add_to_food() {
 	local JSON_DATA TEMPFILE
 	JSON_DATA="$(jq -n \
 		--arg CALORIES "$1" \
 		--arg FOODNAME "$2" \
 		--arg WATER "$3" \
-		'[{"food": $FOODNAME, "calories": $CALORIES | tonumber, "water": $WATER | tonumber}]')" || return $?
+		'{"food": $FOODNAME, "calories": $CALORIES | tonumber, "water": $WATER | tonumber}')" || return $?
+	[[ -n "$4" ]] && JSON_DATA="$(jq --arg TIMESTAMP "$4" '. + {"when": $TIMESTAMP | tonumber}' <<<"${JSON_DATA}")"
 	TEMPFILE="$(mktemp)"
-	printf '%s' "${JSON_DATA}" >"${TEMPFILE}"
+	jq --slurp <<<"${JSON_DATA}" >"${TEMPFILE}"
 	python3 -m ttally from-json --partial food --file "${TEMPFILE}" || return $?
 	rm "${TEMPFILE}"
 }
@@ -91,32 +73,28 @@ main() {
 
 	shift "$((OPTIND - 1))"
 
-	# pick an item using fzf/rofi/choose-gui
+	# pick an item using fzf
 	SELECTED="$(python3 -m ttally export food --stream | jq -r '"\(.food)|\(.calories)|\(.water)"' | sort | uniq -c | sort -rn | chomp | cut -d' ' -f2- | pick "$@")" || {
-		print-or-notify "Didn't select anything to add to calories..." 1>&2
-		return 1
+		abort "Didn't select anything to add to calories...\n"
 	}
 
 	# split into array
-	readarray -d "|" -t CHOSEN <<<"${SELECTED}"
+	readarray -d "|" -t CHOSEN <<<"${SELECTED/$'\n'/}"
 	if [[ "${#CHOSEN[@]}" != 3 ]]; then
-		print-or-notify "Error splitting '${SELECTED}' into three elements, food description can't contain the pipe '|' character" 1>&2
-		return 1
+		abort "Error splitting into three elements, food description can't contain the pipe '|' character\n"
 	fi
 
 	# add item to food
-	local CALS FOODNAME
+	local CALS FOODNAME WATER WHEN
 	FOODNAME="${CHOSEN[0]}"
 	CALS="${CHOSEN[1]}"
-	WATER="${CHOSEN[2]/$'\n'/}"
-	if ((USE_NOW == 0)); then
-		without_date "${CALS}" "${FOODNAME}" "${WATER}" || return $?
-	else
-		with_date "${CALS}" "${FOODNAME}" "${WATER}" || return $?
-	fi
+	WATER="${CHOSEN[2]}"
+	WHEN=''
+	((USE_NOW)) && WHEN="$(date +'%s')"
+	add_to_food "${CALS}" "${FOODNAME}" "${WATER}" "${WHEN}" || return $?
 
 	# print recent items so I can review
-	print-or-notify "$(python3 -m ttally recent food)"
+	python3 -m ttally recent food
 }
 
 main "$@" || exit $?
