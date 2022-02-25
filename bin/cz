@@ -22,6 +22,7 @@ havecmd() {
 
 havecmd jq
 havecmd fzf
+havecmd awk
 havecmd chomp 'Install from https://github.com/seanbreckenridge/chomp'
 
 add_to_food() {
@@ -38,6 +39,15 @@ add_to_food() {
 	rm "${TEMPFILE}"
 }
 
+# print saved items from cache, and any new items; removing any duplicates
+fooditems() {
+	local CZ_CACHE="${HOME}/.cache/cz_cache"
+	{
+		[[ -f "${CZ_CACHE}" ]] && cat "${CZ_CACHE}"
+		python3 -m ttally export food --stream | jq -r '"\(.food)|\(.calories)|\(.water)"' | sort | uniq -c | sort -rn | chomp | cut -d' ' -f2- | tee "${CZ_CACHE}"
+	} | awk '!seen[$0]++'
+}
+
 # pick using fzf if on a terminal, or https://sean.fish/d/picker if run with a keybinding
 pick() {
 	fzf -q "$*" --header='What to add to calories?' || return $?
@@ -48,9 +58,7 @@ main() {
 	local -a CHOSEN
 
 	# pick an item using fzf
-	SELECTED="$(python3 -m ttally export food --stream | jq -r '"\(.food)|\(.calories)|\(.water)"' | sort | uniq -c | sort -rn | chomp | cut -d' ' -f2- | pick "$@")" || {
-		abort "Didn't select anything to add to calories...\n"
-	}
+	SELECTED="$(fooditems | pick "$@")" || abort "Didn't select anything to add to calories...\n"
 
 	# split into array
 	readarray -d "|" -t CHOSEN <<<"${SELECTED/$'\n'/}"
