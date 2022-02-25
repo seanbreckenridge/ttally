@@ -1,11 +1,8 @@
 #!/usr/bin/env bash
-# an adaption of https://github.com/seanbreckenridge/calories-scripts
-# to work on ttally
-#
-# prompts me with fzf to pick something from my 'food'
-# pass the '-d' flag to prompt for datetime using autotui
+# prompts me with fzf to pick something from my 'food' model
+# if the PROMPT_DATETIME envvar is set, prompts for datetime instead
 
-set -u
+set -o pipefail
 
 abort() {
 	# shellcheck disable=SC2059
@@ -47,31 +44,8 @@ pick() {
 }
 
 main() {
-	local SELECTED USE_NOW
+	local SELECTED WHEN
 	local -a CHOSEN
-
-	# prompt for datetime instead
-	USE_NOW='1'
-	while getopts "dh" opt; do
-		case "${opt}" in
-		d)
-			USE_NOW='0'
-			;;
-		h)
-			printf 'Usage: cz [-h] [-p] [-d]\n'
-			printf 'prompts me with fzf to pick something from my food to add again\n'
-			printf '\t-h\tShow help message\n'
-			printf '\t-d\tPrompt for the datetime\n'
-			exit 0
-			;;
-		*)
-			printf 'Unknown argument: %s\n' "${opt}"
-			exit 1
-			;;
-		esac
-	done
-
-	shift "$((OPTIND - 1))"
 
 	# pick an item using fzf
 	SELECTED="$(python3 -m ttally export food --stream | jq -r '"\(.food)|\(.calories)|\(.water)"' | sort | uniq -c | sort -rn | chomp | cut -d' ' -f2- | pick "$@")" || {
@@ -80,18 +54,10 @@ main() {
 
 	# split into array
 	readarray -d "|" -t CHOSEN <<<"${SELECTED/$'\n'/}"
-	if [[ "${#CHOSEN[@]}" != 3 ]]; then
-		abort "Error splitting into three elements, food description can't contain the pipe '|' character\n"
-	fi
 
 	# add item to food
-	local CALS FOODNAME WATER WHEN
-	FOODNAME="${CHOSEN[0]}"
-	CALS="${CHOSEN[1]}"
-	WATER="${CHOSEN[2]}"
-	WHEN=''
-	((USE_NOW)) && WHEN="$(date +'%s')"
-	add_to_food "${CALS}" "${FOODNAME}" "${WATER}" "${WHEN}" || return $?
+	[[ -z "${PROMPT_DATETIME}" ]] && WHEN="$(date +'%s')"
+	add_to_food "${CHOSEN[1]}" "${CHOSEN[0]}" "${CHOSEN[2]}" "${WHEN:-}" || return $?
 
 	# print recent items so I can review
 	python3 -m ttally recent food
