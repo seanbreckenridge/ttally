@@ -42,7 +42,7 @@ def glob_namedtuple(
 
 # used in __main__.py for the from_json command
 def save_from(nt: Type[NamedTuple], use_input: TextIO, partial: bool = False) -> None:
-    json_blob: str = use_input.read()
+    json_text: str = use_input.read()
     p = datafile(namedtuple_func_name(nt))
     items: List[NamedTuple] = load_from(nt, p, allow_empty=True)
     new_items: List[NamedTuple] = []
@@ -50,13 +50,13 @@ def save_from(nt: Type[NamedTuple], use_input: TextIO, partial: bool = False) ->
         # load the list as json blobs
         os.environ["AUTOTUI_DISABLE_WARNINGS"] = "1"  # ignore null warnings
         blobs: List[Dict[str, Any]] = []
-        for b in namedtuple_sequence_loads(json_blob, nt):
+        for b in namedtuple_sequence_loads(json_text, nt):
             blobs.append({k: v for k, v in b._asdict().items() if v is not None})
         del os.environ["AUTOTUI_DISABLE_WARNINGS"]
         for bd in blobs:
             new_nt = prompt_namedtuple(nt, attr_use_values=bd)
             new_items.append(new_nt)
     else:
-        new_items.extend(namedtuple_sequence_loads(json_blob, nt))
+        new_items.extend(namedtuple_sequence_loads(json_text, nt))
     items.extend(new_items)
     dump_to(items, p)
