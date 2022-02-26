@@ -8,7 +8,7 @@
 # https://github.com/seanbreckenridge/ttally
 
 from datetime import datetime
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 
 
 class Shower(NamedTuple):
