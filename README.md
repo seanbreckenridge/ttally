@@ -76,24 +76,20 @@ Whenever I run any of those aliases, it inspects the model in the config file, d
 
 <img src="https://raw.githubusercontent.com/seanbreckenridge/autotui/master/.assets/builtin_demo.gif">
 
-... which saves some information I enter to a JSON file:
+... which saves some information I enter to a file:
 
-```json
-[
-  {
-    "when": 1598856786,
-    "glasses": 2.0
-  }
-]
+```yaml
+- when: 1598856786,
+  glasses": 2.0
 ```
 
 ---
 
-`ttally` is an interactive module using [`autotui`](https://github.com/seanbreckenridge/autotui) to save things I do often to JSON
+`ttally` is an interactive module using [`autotui`](https://github.com/seanbreckenridge/autotui) to save things I do often to YAML
 
-Currently, I use this to store info like whenever I eat something/drink water/shower/my current weight periodically
+Currently, I use this to store info like whenever I eat something/drink water/my current weight/random thoughts periodically
 
-Given a `NamedTuple` defined in [`~/.config/ttally.py`](https://sean.fish/d/ttally.py?dark), this creates interactive interfaces which validate my input to save information to JSON files
+Given a `NamedTuple` defined in [`~/.config/ttally.py`](https://sean.fish/d/ttally.py?dark), this creates interactive interfaces which validate my input to save information to JSON/YAML files
 
 The `{tuple}-now` aliases set the any `datetime` values for the prompted tuple to now
 
@@ -110,21 +106,21 @@ $ water-recent 5
 
 ## Library Usage
 
-The whole point of this interface is that it validates my input to types, stores it as a basic editable format (JSON), but is still loadable into typed ADT-like Python objects, with minimal boilerplate. I just need to add a NamedTuple to `~/.config/ttally.py`, and all the interactive interfaces and resulting JSON files are automatically created
+The whole point of this interface is that it validates my input to types, stores it as a basic editable format (YAML), but is still loadable into typed python objects, with minimal boilerplate. I just need to add a NamedTuple to `~/.config/ttally.py`, and all the interactive interfaces and resulting YAML files are automatically created
 
-This intentionally uses JSON and doesn't store the info into a single "merged" database. A single database:
+This intentionally uses YAML and doesn't store the info into a single "merged" database. A single database:
 
 - requires some way to edit/delete items - at that point I'm essentially re-implementing a CRUD interface _again_
 - makes it harder to merge them together ([I've tried](https://github.com/seanbreckenridge/calories-scripts/blob/master/calmerge))
 
-JSON isn't perfect but at least I can open it in vim and delete/edit some value. Since the JSON files are pretty-printed, its also pretty trivial to grep/duplicate items by copying a few lines around. Without writing a bunch of code, this seems like the least amount of friction to immediately create new interfaces
+YAML isn't perfect but at least I can open it in vim and delete/edit some value. Since the YAML files are pretty-printed, its also pretty trivial to grep/duplicate items by copying a few lines around. Without writing a bunch of code, this seems like the least amount of friction to immediately create new interfaces
 
-The JSON files are versioned with the date/OS/platform, so I'm able to add items on my linux, mac, or android (using [`termux`](https://termux.com/)) and sync them across all my devices using [`SyncThing`](https://syncthing.net/). Those look like:
+The YAML files are versioned with the date/OS/platform, so I'm able to add items on my linux, mac, or android (using [`termux`](https://termux.com/)) and sync them across all my devices using [`SyncThing`](https://syncthing.net/). Those look like:
 
 ```
-food-darwin-seans-mbp.localdomain-2021-03.json
-food-linux-bastion-2021-03.json
-food-linux-localhost-2021-04.json
+food-darwin-seans-mbp.localdomain-2021-03.yaml
+food-linux-bastion-2021-03.yaml
+food-linux-localhost-2021-04.yaml
 ```
 
 ... which can then be combined back into python, like:
@@ -151,6 +147,8 @@ The `from-json` command can be used to send this JSON which matches a model, i.e
 $ hpi query ttally.funcs.food --recent 1d -s | jq -r '(.quantity)*(.calories)' | datamash sum 1
 2252
 ```
+
+If you'd prefer to use JSON files, you can set the `TTALLY_EXT=json` environment variable.
 
 ## Installation
 

@@ -40,7 +40,8 @@ def datafile(for_function: str, in_dir: Optional[Path] = None) -> Path:
     # conflicts across computers while using syncthing
     # this also decreases the amount of items that have
     # to be loaded into memory for load_prompt_and_writeback
-    u = f"{for_function}-{versioned_timestamp()}.json"
+    ext = os.environ.get("TTALLY_EXT", "yaml")
+    u = f"{for_function}-{versioned_timestamp()}.{ext}"
     return Path(in_dir or ttally_abs()).absolute() / u
 
 

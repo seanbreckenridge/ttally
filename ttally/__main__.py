@@ -141,7 +141,6 @@ def _recent(model: str, count: int) -> None:
 
 @main.command()
 @model_with_completion
-@click.argument("COUNT", type=int, default=10)
 @click.option(
     "-s",
     "--stream",
@@ -149,13 +148,16 @@ def _recent(model: str, count: int) -> None:
     is_flag=True,
     help="Stream objects as they're read, instead of a list",
 )
-def export(model: str, count: int, stream: bool) -> None:
+def export(model: str, stream: bool) -> None:
     """
     List all the data from a model as JSON
     """
-    from .json import glob_json
+    from autotui.fileio import namedtuple_sequence_dumps
+    from .autotui_ext import glob_namedtuple
 
-    itr = glob_json(_model_from_string(model))
+    itr = json.loads(
+        namedtuple_sequence_dumps(list(glob_namedtuple(_model_from_string(model))))
+    )
 
     if stream:
         for blob in itr:
@@ -163,6 +165,7 @@ def export(model: str, count: int, stream: bool) -> None:
             sys.stdout.write("\n")
     else:
         sys.stdout.write(json.dumps(list(itr)))
+        sys.stdout.write("\n")
     sys.stdout.flush()
 
 
