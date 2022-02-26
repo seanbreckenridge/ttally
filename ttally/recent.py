@@ -1,10 +1,28 @@
-from typing import List, NamedTuple, Type, Callable
+from typing import List, NamedTuple, Type, Callable, Any
 from datetime import datetime
 
 import more_itertools
 
 from .autotui_ext import glob_namedtuple
-from .common import namedtuple_extract_from_annotation
+
+
+def namedtuple_extract_from_annotation(nt: Type[NamedTuple], _type: Any) -> str:
+    """
+    >>> from typing import NamedTuple; from datetime import datetime
+    >>> class Test(NamedTuple): something: datetime
+    >>> namedtuple_extract_from_annotation(Test, datetime)
+    'something'
+    """
+    import inspect
+    from autotui.typehelpers import resolve_annotation_single
+
+    for attr_name, param in inspect.signature(nt).parameters.items():
+        # Optional[(<class 'int'>, False)]
+        attr_type, _ = resolve_annotation_single(param.annotation)
+
+        if attr_type == _type:
+            return attr_name
+    raise TypeError(f"Could not find {_type} on {nt}")
 
 
 def _extract_dt_from(nt: Type[NamedTuple]) -> Callable[[NamedTuple], datetime]:

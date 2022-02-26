@@ -8,7 +8,11 @@ from autotui import namedtuple_sequence_loads, prompt_namedtuple
 from autotui.shortcuts import load_prompt_and_writeback, load_from, dump_to
 
 from .file import datafile, glob_datafiles
-from .common import namedtuple_func_name
+
+
+def namedtuple_func_name(nt: Type[NamedTuple]) -> str:
+    assert hasattr(nt, "_fields"), "Did not receive a valid NamedTuple!"
+    return str(nt.__name__.casefold())
 
 
 # load, prompt and writeback one of the models
