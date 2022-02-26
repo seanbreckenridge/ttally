@@ -31,10 +31,10 @@ def main() -> None:
     pass
 
 
-@main.command()
+@main.command(short_help="generate shell aliases")
 def generate() -> None:
     """
-    Generate the aliases!
+    Generate the shell aliases!
     """
     from .codegen import generate_shell_aliases
 
@@ -56,7 +56,7 @@ def _model_complete(
 model_with_completion = click.argument("MODEL", shell_complete=_model_complete)
 
 
-@main.command()
+@main.command(short_help="add item by piping JSON")
 @model_with_completion
 @click.option(
     "-p",
@@ -89,7 +89,7 @@ def from_json(model: str, partial: bool, file: Optional[str]) -> None:
             save_from(_model_from_string(model), use_input=f, partial=partial)
 
 
-@main.command()
+@main.command(short_help="print the datafile location")
 @model_with_completion
 def datafile(model: str) -> None:
     """
@@ -101,11 +101,11 @@ def datafile(model: str) -> None:
     assert m in MODELS, f"Couldn't find model {m}"
     f = df(m)
     if not f.exists():
-        click.echo(f"Warning: {f} doesn't exist", err=True)
+        click.secho(f"Warning: {f} doesn't exist", err=True, fg="red")
     click.echo(f)
 
 
-@main.command(name="prompt")
+@main.command(name="prompt", help="tally an item")
 @model_with_completion
 def _prompt(model: str) -> None:
     """
@@ -116,7 +116,7 @@ def _prompt(model: str) -> None:
     prompt(_model_from_string(model))
 
 
-@main.command(name="prompt-now")
+@main.command(name="prompt-now", help="tally an item (now)")
 @model_with_completion
 def _prompt_now(model: str) -> None:
     """
@@ -127,7 +127,7 @@ def _prompt_now(model: str) -> None:
     prompt_now(_model_from_string(model))
 
 
-@main.command(name="recent")
+@main.command(name="recent", short_help="print recently tallied items")
 @model_with_completion
 @click.argument("COUNT", type=int, default=10)
 def _recent(model: str, count: int) -> None:
@@ -139,7 +139,7 @@ def _recent(model: str, count: int) -> None:
     query_print(_model_from_string(model), count)
 
 
-@main.command()
+@main.command(short_help="export all data from a model")
 @model_with_completion
 @click.option(
     "-s",
@@ -167,6 +167,20 @@ def export(model: str, stream: bool) -> None:
         sys.stdout.write(json.dumps(list(itr)))
         sys.stdout.write("\n")
     sys.stdout.flush()
+
+@main.command(short_help="edit the datafile")
+@model_with_completion
+def edit(model: str) -> None:
+    """
+    Edit the current datafile with your editor
+    """
+    from .file import datafile as df
+
+    _model_from_string(model)
+    f = df(model.lower())
+    if not f.exists():
+        click.secho(f"Warning: {f} doesn't exist", err=True, fg="red")
+    click.edit(filename=str(f))
 
 
 if __name__ == "__main__":

@@ -178,13 +178,14 @@ Options:
   --help  Show this message and exit.
 
 Commands:
-  datafile    Print the location of the current datafile for some model
-  export      List all the data from a model as JSON
-  from-json   A way to allow external programs to save JSON data to the...
-  generate    Generate the aliases!
-  prompt      Prompt for every field in the given model
-  prompt-now  Prompt for every field in the model, except datetime, which...
-  recent      List recent items logged for this model
+  datafile    print the datafile location
+  edit        edit the datafile
+  export      export all data from a model
+  from-json   add item by piping JSON
+  generate    generate shell aliases
+  prompt      tally an item
+  prompt-now  tally an item (now)
+  recent      print recently tallied items
 ```
 
 ### Configuration
