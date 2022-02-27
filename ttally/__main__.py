@@ -168,6 +168,7 @@ def export(model: str, stream: bool) -> None:
         sys.stdout.write("\n")
     sys.stdout.flush()
 
+
 @main.command(short_help="edit the datafile")
 @model_with_completion
 def edit(model: str) -> None:
