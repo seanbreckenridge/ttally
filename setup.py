@@ -21,12 +21,13 @@ setup(
     install_requires=reqs,
     package_data={pkg: ["py.typed"]},
     entry_points={"console_scripts": ["ttally = ttally.__main__:main"]},
-    scripts=list(map(str, Path("bin").rglob("*"))),
+    scripts=[str(f) for f in Path("bin").iterdir()],
     classifiers=[
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
     ],
 )
