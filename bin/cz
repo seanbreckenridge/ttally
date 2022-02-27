@@ -27,10 +27,7 @@ havecmd chomp 'Install from https://github.com/seanbreckenridge/chomp'
 
 add_to_food() {
 	local JSON_DATA TEMPFILE
-	JSON_DATA="$(jq -n \
-		--arg CALORIES "$1" \
-		--arg FOODNAME "$2" \
-		--arg WATER "$3" \
+	JSON_DATA="$(jq -n --arg FOODNAME "$1" --arg CALORIES "$2" --arg WATER "$3" \
 		'{"food": $FOODNAME, "calories": $CALORIES | tonumber, "water": $WATER | tonumber}')" || return $?
 	[[ -n "$4" ]] && JSON_DATA="$(jq --arg TIMESTAMP "$4" '. + {"when": $TIMESTAMP | tonumber}' <<<"${JSON_DATA}")"
 	TEMPFILE="$(mktemp)"
@@ -56,11 +53,11 @@ main() {
 	SELECTED="$(fooditems | fzf -q "$*" --header='What to add to calories?')" || abort "Didn't select anything to add to calories...\n"
 
 	# split into array
-	readarray -d "|" -t CHOSEN <<<"${SELECTED/$'\n'/}" || abort 'Error splitting chosen line into parts'
+	readarray -d "|" -t CHOSEN <<<"${SELECTED/$'\n'/}" || abort 'Error splitting chosen line into parts\n'
 
 	# add item to food
 	[[ -z "${PROMPT_DATETIME}" ]] && WHEN="$(date +'%s')"
-	add_to_food "${CHOSEN[1]}" "${CHOSEN[0]}" "${CHOSEN[2]}" "${WHEN:-}" || return $?
+	add_to_food "${CHOSEN[0]}" "${CHOSEN[1]}" "${CHOSEN[2]}" "${WHEN:-}" || return $?
 
 	# print recent items so I can review
 	python3 -m ttally recent food
