@@ -24,6 +24,7 @@ havecmd jq
 havecmd fzf
 havecmd awk
 havecmd chomp 'Install from https://github.com/seanbreckenridge/chomp'
+havecmd fzfcache 'Install from https://github.com/seanbreckenridge/fzfcache'
 
 add_to_food() {
 	local JSON_DATA TEMPFILE
@@ -38,11 +39,7 @@ add_to_food() {
 
 # print saved items from cache, and any new items; removing any duplicates
 fooditems() {
-	local CZ_CACHE="${HOME}/.cache/cz_cache"
-	{
-		[[ -f "${CZ_CACHE}" ]] && cat "${CZ_CACHE}"
-		python3 -m ttally export food --stream | jq -r '"\(.food)|\(.calories)|\(.water)"' | sort | uniq -c | sort -rn | chomp | cut -d' ' -f2- | tee "${CZ_CACHE}"
-	} | awk '!seen[$0]++'
+	fzfcache "python3 -m ttally export food --stream | jq -r '\"\(.food)|\(.calories)|\(.water)\"' | sort | uniq -c | sort -rn | chomp | cut -d' ' -f2-"
 }
 
 main() {
