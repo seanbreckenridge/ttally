@@ -129,14 +129,22 @@ def _prompt_now(model: str) -> None:
 
 @main.command(name="recent", short_help="print recently tallied items")
 @model_with_completion
+@click.option(
+    "-r",
+    "--remove-attrs",
+    type=str,
+    default="",
+    help="comma separated list of attributes to remove while printing",
+)
 @click.argument("COUNT", type=int, default=10)
-def _recent(model: str, count: int) -> None:
+def _recent(model: str, remove_attrs: str, count: int) -> None:
     """
     List recent items logged for this model
     """
     from .recent import query_print
 
-    query_print(_model_from_string(model), count)
+    attrs = [a.strip() for a in remove_attrs.split(",") if a.strip()]
+    query_print(_model_from_string(model), count, remove_attrs=attrs)
 
 
 @main.command(short_help="export all data from a model")
