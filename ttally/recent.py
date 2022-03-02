@@ -56,4 +56,4 @@ def query_print(nt: Type[NamedTuple], count: int, remove_attrs: List[str]) -> No
     ]
     for o in res:
         print(datetime.fromtimestamp(getattr(o, dt_attr).timestamp()), end="\t")
-        print("\t".join([str(getattr(o, a)) for a in other_attrs]))
+        print(" \t".join([str(getattr(o, a)) for a in other_attrs]))
