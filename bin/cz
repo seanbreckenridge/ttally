@@ -57,7 +57,7 @@ main() {
 	add_to_food "${CHOSEN[0]}" "${CHOSEN[1]}" "${CHOSEN[2]}" "${WHEN:-}" || return $?
 
 	# print recent items so I can review
-	python3 -m ttally recent food
+	[[ -n "${SKIP_RECENT}" ]] || python3 -m ttally recent food
 }
 
 main "$@" || exit $?
