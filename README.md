@@ -186,7 +186,7 @@ Commands:
   export      export all data from a model
   from-json   add item by piping JSON
   generate    generate shell aliases
-  merge       merge all data into one file
+  merge       merge all data for a model into one file
   prompt      tally an item
   prompt-now  tally an item (now)
   recent      print recently tallied items
