@@ -1,3 +1,4 @@
+import os
 import sys
 import json
 from typing import NamedTuple, Type, Optional, List, Sequence
@@ -175,6 +176,47 @@ def export(model: str, stream: bool) -> None:
         sys.stdout.write(json.dumps(list(itr)))
         sys.stdout.write("\n")
     sys.stdout.flush()
+
+
+@main.command(short_help="merge all data for a model into one file")
+@model_with_completion
+def merge(model: str) -> None:
+    """
+    Merge all datafiles for one model into a single '-merged.json' file
+    """
+    from pathlib import Path
+    from datetime import datetime
+
+    from autotui.fileio import namedtuple_sequence_dumps
+    from .autotui_ext import glob_namedtuple
+    from .file import glob_datafiles, ttally_temp_dir, ttally_abs
+
+    datafiles = list(glob_datafiles(model))
+    if len(datafiles) == 0:
+        click.echo(f"No datafiles for model {model}", err=True)
+        return
+
+    data = json.loads(
+        namedtuple_sequence_dumps(list(glob_namedtuple(_model_from_string(model))))
+    )
+
+    epoch = int(datetime.now().timestamp())
+    cachefile = ttally_temp_dir() / f"{model}-{epoch}-merged.json"
+
+    click.echo(f"Writing backup to '{cachefile}'", err=True)
+    with cachefile.open("w") as f:
+        json.dump(data, f)
+
+    # remove current datafiles
+    for f in datafiles:
+        click.echo(f"Removing '{f}'", err=True)
+        f.unlink()
+
+    merge_target = ttally_abs() / f"{model}-merged.json"
+    with merge_target.open("w") as f:
+        json.dump(data, f)
+
+    click.echo(f"Wrote merged file to '{merge_target}'", err=True)
 
 
 @main.command(short_help="edit the datafile")

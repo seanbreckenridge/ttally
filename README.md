@@ -10,9 +10,12 @@
 from datetime import datetime
 from typing import NamedTuple
 
+from seanb.ttally_self import SelfTypes
 
-class Shower(NamedTuple):
+
+class Self(NamedTuple):
     when: datetime
+    what: SelfTypes
 
 
 class Weight(NamedTuple):
@@ -64,9 +67,9 @@ alias event-recent='python3 -m ttally recent event'
 alias food='python3 -m ttally prompt food'
 alias food-now='python3 -m ttally prompt-now food'
 alias food-recent='python3 -m ttally recent food'
-alias shower='python3 -m ttally prompt shower'
-alias shower-now='python3 -m ttally prompt-now shower'
-alias shower-recent='python3 -m ttally recent shower'
+alias self='python3 -m ttally prompt self'
+alias self-now='python3 -m ttally prompt-now self'
+alias self-recent='python3 -m ttally recent self'
 alias weight='python3 -m ttally prompt weight'
 alias weight-now='python3 -m ttally prompt-now weight'
 alias weight-recent='python3 -m ttally recent weight'
@@ -183,6 +186,7 @@ Commands:
   export      export all data from a model
   from-json   add item by piping JSON
   generate    generate shell aliases
+  merge       merge all data into one file
   prompt      tally an item
   prompt-now  tally an item (now)
   recent      print recently tallied items
