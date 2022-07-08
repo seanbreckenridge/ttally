@@ -191,7 +191,7 @@ def merge(model: str) -> None:
     from .autotui_ext import glob_namedtuple
     from .file import glob_datafiles, ttally_temp_dir, ttally_abs
 
-    datafiles = list(glob_datafiles(model))
+    datafiles: List[Path] = list(glob_datafiles(model))
     if len(datafiles) == 0:
         click.echo(f"No datafiles for model {model}", err=True)
         return
@@ -204,17 +204,17 @@ def merge(model: str) -> None:
     cachefile = ttally_temp_dir() / f"{model}-{epoch}-merged.json"
 
     click.echo(f"Writing backup to '{cachefile}'", err=True)
-    with cachefile.open("w") as f:
-        json.dump(data, f)
+    with cachefile.open("w") as backup_f:
+        json.dump(data, backup_f)
 
     # remove current datafiles
-    for f in datafiles:
-        click.echo(f"Removing '{f}'", err=True)
-        f.unlink()
+    for rmf in datafiles:
+        click.echo(f"Removing '{rmf}'", err=True)
+        rmf.unlink()
 
     merge_target = ttally_abs() / f"{model}-merged.json"
-    with merge_target.open("w") as f:
-        json.dump(data, f)
+    with merge_target.open("w") as merged_f:
+        json.dump(data, merged_f)
 
     click.echo(f"Wrote merged file to '{merge_target}'", err=True)
 
