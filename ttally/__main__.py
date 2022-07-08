@@ -179,7 +179,8 @@ def export(model: str, stream: bool) -> None:
 
 @main.command(short_help="merge all data for a model into one file")
 @model_with_completion
-def merge(model: str) -> None:
+@click.option("--sort-key", default=None, help="Sort resulting merged data by JSON key")
+def merge(model: str, sort_key: Optional[str]) -> None:
     """
     Merge all datafiles for one model into a single '-merged.json' file
     """
@@ -198,6 +199,11 @@ def merge(model: str) -> None:
     data = json.loads(
         namedtuple_sequence_dumps(list(glob_namedtuple(_model_from_string(model))))
     )
+
+    # if provided, use sort key
+    if sort_key is not None and len(data) > 0:
+        assert sort_key in data[0], f"Could not find {sort_key} in {data[0]}"
+        data = list(sorted(data, key=lambda obj: obj[sort_key]))  # type: ignore[no-any-return]
 
     epoch = int(datetime.now().timestamp())
     cachefile = ttally_temp_dir() / f"{model}-{epoch}-merged.json"
