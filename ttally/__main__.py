@@ -1,4 +1,3 @@
-import os
 import sys
 import json
 from typing import NamedTuple, Type, Optional, List, Sequence
