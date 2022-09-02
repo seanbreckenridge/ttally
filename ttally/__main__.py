@@ -105,6 +105,14 @@ def datafile(model: str) -> None:
     click.echo(f)
 
 
+@main.command(name="models", help="list models")
+def _models_cmd() -> None:
+    """
+    List all ttally models
+    """
+    click.echo("\n".join(_model_names()))
+
+
 @main.command(name="prompt", help="tally an item")
 @model_with_completion
 def _prompt(model: str) -> None:
@@ -189,7 +197,7 @@ def merge(model: str, sort_key: Optional[str]) -> None:
 
     from autotui.fileio import namedtuple_sequence_dumps
     from .autotui_ext import glob_namedtuple
-    from .file import glob_datafiles, ttally_temp_dir, ttally_abs
+    from .file import glob_datafiles, ttally_temp_dir, ttally_merged_path
 
     datafiles: List[Path] = list(glob_datafiles(model))
     if len(datafiles) == 0:
@@ -217,7 +225,7 @@ def merge(model: str, sort_key: Optional[str]) -> None:
         click.echo(f"Removing '{rmf}'", err=True)
         rmf.unlink()
 
-    merge_target = ttally_abs() / f"{model}-merged.json"
+    merge_target = ttally_merged_path(model)
     with merge_target.open("w") as merged_f:
         json.dump(data, merged_f)
 

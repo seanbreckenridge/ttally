@@ -1,0 +1,38 @@
+#!/usr/bin/env python3
+
+import json
+import subprocess
+import shlex
+from typing import Any
+
+import click
+from autotui.fileio import namedtuple_sequence_dumps
+from autotui.pick import pick_namedtuple
+from ttally.autotui_ext import glob_namedtuple
+from ttally.file import ttally_merged_path
+from ttally.config import Food  # type: ignore
+
+
+def main():
+    subprocess.run(shlex.split("ttally merge food --sort-key when"), check=True)
+    food: list[Food] = list(glob_namedtuple(Food))
+    picked: Food = pick_namedtuple(food)
+    print(picked)
+    cals = int(click.prompt("Calories", type=int))
+    water = int(click.prompt("Water", type=int))
+    data = json.loads(namedtuple_sequence_dumps(food))
+    edited_list: list[dict[str, Any]] = []
+    for blob in data:
+        if blob["food"] == picked.food:
+            assert "calories" in blob and "water" in blob and "quantity" in blob
+            print("Before:", blob)
+            blob["calories"] = cals
+            blob["water"] = water
+            blob["quantity"] = blob["quantity"] / (cals / picked.calories)
+            print("After:", blob)
+        edited_list.append(blob)
+    ttally_merged_path("food").write_text(json.dumps(edited_list))
+
+
+if __name__ == "__main__":
+    main()

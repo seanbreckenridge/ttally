@@ -187,6 +187,7 @@ Commands:
   from-json   add item by piping JSON
   generate    generate shell aliases
   merge       merge all data for a model into one file
+  models      list models
   prompt      tally an item
   prompt-now  tally an item (now)
   recent      print recently tallied items

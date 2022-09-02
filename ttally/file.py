@@ -35,6 +35,10 @@ def ttally_abs() -> Path:
     return p
 
 
+def ttally_merged_path(model: str) -> Path:
+    return ttally_abs() / f"{model}-merged.json"
+
+
 # creates unique datafiles for each platform
 def datafile(for_function: str, in_dir: Optional[Path] = None) -> Path:
     # add some OS/platform specific code to this, to prevent
