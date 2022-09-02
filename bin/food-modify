@@ -13,13 +13,24 @@ from ttally.file import ttally_merged_path
 from ttally.config import Food  # type: ignore
 
 
+@click.command()
 def main():
+    """
+    updates the water/calorie count for a food and fix the old quantities based on new calorie count
+    """
+    # merge data into single file
     subprocess.run(shlex.split("ttally merge food --sort-key when"), check=True)
+
+    # pick
     food: list[Food] = list(glob_namedtuple(Food))
     picked: Food = pick_namedtuple(food)
     print(picked)
+
+    # prompt calories/water
     cals = int(click.prompt("Calories", type=int))
     water = int(click.prompt("Water", type=int))
+
+    # update and fix quantity based on new calories ratio
     data = json.loads(namedtuple_sequence_dumps(food))
     edited_list: list[dict[str, Any]] = []
     for blob in data:
@@ -31,6 +42,8 @@ def main():
             blob["quantity"] = blob["quantity"] / (cals / picked.calories)
             print("After:", blob)
         edited_list.append(blob)
+
+    # write back to merged file
     ttally_merged_path("food").write_text(json.dumps(edited_list))
 
 
