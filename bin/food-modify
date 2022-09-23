@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
+import sys
 import json
 import subprocess
 import shlex
-from typing import Any
+from typing import Any, Optional
 
 import click
 from autotui.fileio import namedtuple_sequence_dumps
@@ -23,7 +24,11 @@ def main():
 
     # pick
     food: list[Food] = list(glob_namedtuple(Food))
-    picked: Food = pick_namedtuple(food)
+    picked: Optional[Food] = pick_namedtuple(food)
+    if picked is None:
+        click.echo("No food picked", err=True)
+        sys.exit(1)
+
     print(picked)
 
     # prompt calories/water
@@ -39,7 +44,10 @@ def main():
             print("Before:", blob)
             blob["calories"] = cals
             blob["water"] = water
-            blob["quantity"] = blob["quantity"] / (cals / picked.calories)
+            if cals == 0:
+                blob["quantity"] = blob["quantity"] / (water / picked.water)
+            else:
+                blob["quantity"] = blob["quantity"] / (cals / picked.calories)
             print("After:", blob)
         edited_list.append(blob)
 
