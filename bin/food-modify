@@ -15,7 +15,13 @@ from ttally.config import Food  # type: ignore
 
 
 @click.command()
-def main():
+@click.option(
+    "--scale/--no-scale",
+    help="scale quantity based on new calories/water amounts",
+    default=True,
+    is_flag=True,
+)
+def main(scale: bool):
     """
     updates the water/calorie count for a food and fix the old quantities based on new calorie count
     """
@@ -44,10 +50,11 @@ def main():
             print("Before:", blob)
             blob["calories"] = cals
             blob["water"] = water
-            if cals == 0:
-                blob["quantity"] = blob["quantity"] / (water / picked.water)
-            else:
-                blob["quantity"] = blob["quantity"] / (cals / picked.calories)
+            if scale:
+                if cals == 0:
+                    blob["quantity"] = blob["quantity"] / (water / picked.water)
+                else:
+                    blob["quantity"] = blob["quantity"] / (cals / picked.calories)
             print("After:", blob)
         edited_list.append(blob)
 
