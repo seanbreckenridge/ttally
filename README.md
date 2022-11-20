@@ -162,7 +162,7 @@ ttally export food > food_merged.json
 ## Installation
 
 ```bash
-pip install 'git+https://github.com/seanbreckenridge/ttally'
+pip install ttally
 ```
 
 ```
