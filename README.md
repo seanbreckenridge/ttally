@@ -36,7 +36,7 @@ class Food(NamedTuple):
     # if I don't supply a quantity, default to 1
     @staticmethod
     def attr_validators() -> dict:
-        # https://sean.fish/d/ttally_types.py?dark
+        # https://sean.fish/d/ttally_types.py?redirect
         from seanb.ttally_types import prompt_float_default
 
         return {"quantity": lambda: prompt_float_default("quantity")}
@@ -52,7 +52,7 @@ class Event(NamedTuple):
 
     @staticmethod
     def attr_validators() -> dict:
-        # https://sean.fish/d/ttally_types.py?dark
+        # https://sean.fish/d/ttally_types.py?redirect
         from seanb.ttally_types import edit_in_vim
 
         return {"comments": edit_in_vim}
@@ -92,7 +92,7 @@ Whenever I run any of those aliases, it inspects the model in the config file, d
 
 Currently, I use this to store info like whenever I eat something/drink water/my current weight/random thoughts periodically
 
-Given a `NamedTuple` defined in [`~/.config/ttally.py`](https://sean.fish/d/ttally.py?dark), this creates interactive interfaces which validate my input to save information to JSON/YAML files
+Given a `NamedTuple` defined in [`~/.config/ttally.py`](https://sean.fish/d/ttally.py?redirect), this creates interactive interfaces which validate my input to save information to JSON/YAML files
 
 The `{tuple}-now` aliases set the any `datetime` values for the prompted tuple to now
 
