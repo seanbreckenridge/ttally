@@ -32,11 +32,16 @@ def _extract_dt_from(nt: Type[NamedTuple]) -> Callable[[NamedTuple], datetime]:
     return lambda o: getattr(o, dt_attr)  # type: ignore[no-any-return]
 
 
+def sort_namedtuple_by_datetime(
+    nt: Type[NamedTuple], reverse: bool = False
+) -> List[NamedTuple]:
+    return sorted(glob_namedtuple(nt), key=_extract_dt_from(nt), reverse=reverse)
+
+
 def query_recent(nt: Type[NamedTuple], count: int) -> List[NamedTuple]:
     """query the module for recent entries (based on datetime) from a namedtuple"""
     items: List[NamedTuple] = more_itertools.take(
-        count,
-        sorted(glob_namedtuple(nt), key=_extract_dt_from(nt), reverse=True),
+        count, sort_namedtuple_by_datetime(nt, reverse=True)
     )
     return items
 
