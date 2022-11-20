@@ -153,10 +153,10 @@ $ hpi query ttally.funcs.food --recent 1d -s | jq -r '(.quantity)*(.calories)' |
 
 If you'd prefer to use JSON files, you can set the `TTALLY_EXT=json` environment variable.
 
-This can still load data from YAML or JSON (or both), every couple months I'll combine all the versioned files to a single merged file using the `export` command:
+This can still load data from YAML or JSON (or both), every couple months I'll combine all the versioned files to a single merged file using the `merge` command:
 
 ```
-ttally export food > food_merged.json
+ttally merge food
 ```
 
 ## Installation
