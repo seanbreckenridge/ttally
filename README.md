@@ -213,6 +213,14 @@ fi
 [[ -e "${TTALLY_ALIASES}" ]] && source "${TTALLY_ALIASES}"  # if the file exists, make the aliases available
 ```
 
+For shell completion to autocomplete options/model names:
+
+```
+eval "$(_TTALLY_COMPLETE=bash_source ttally)"  # in ~/.bashrc
+eval "$(_TTALLY_COMPLETE=zsh_source ttally)"  # in ~/.zshrc
+eval "$(_TTALLY_COMPLETE=fish_source ttally)"  # in ~/.config/fish/config.fish
+```
+
 ### Caching
 
 `ttally update-cache` can be used to speedup the `export` and `recent` commands:
