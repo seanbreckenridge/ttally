@@ -238,7 +238,7 @@ Options:
   --help          Show this message and exit.
 ```
 
-I personally run it once every 5 minutes in the background, so at least my first interaction with `ttally` is guaranteed to be [fast](https://github.com/seanbreckenridge/ttally/issues/5#issuecomment-1321389800)
+I personally run it [once every 3 minutes](https://sean.fish/d/ttally_cache.job?redirect) in the background, so at least my first interaction with `ttally` is guaranteed to be [fast](https://github.com/seanbreckenridge/ttally/issues/5#issuecomment-1321389800)
 
 ### Shell Scripts
 
