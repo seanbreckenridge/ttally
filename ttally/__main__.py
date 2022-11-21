@@ -273,16 +273,21 @@ def update_cache(print_hashes: bool) -> None:
     """
     Caches data for 'export' and 'recent' by saving
     the current data and an index to ~/.cache/ttally
+
+    exit code 0 if cache was updated, 2 if it was already up to date
     """
     from .cache import cache_sorted_exports, file_hashes
 
     was_stale = cache_sorted_exports()
+    ret = 0
     if was_stale:
         click.echo("Cache was stale, updated", err=True)
     else:
         click.echo("Cache is already up to date", err=True)
+        ret = 2
     if print_hashes:
         click.echo(json.dumps(file_hashes()))
+    sys.exit(ret)
 
 
 @main.command(short_help="edit the datafile")

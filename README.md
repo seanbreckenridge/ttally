@@ -231,6 +231,8 @@ Usage: ttally update-cache [OPTIONS]
   Caches data for 'export' and 'recent' by saving the current data and an
   index to ~/.cache/ttally
 
+  exit code 0 if cache was updated, 2 if it was already up to date
+
 Options:
   --print-hashes  print current filehash debug info
   --help          Show this message and exit.
