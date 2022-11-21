@@ -114,7 +114,7 @@ pip install ttally
 >>>PMARK
 #!/usr/bin/env bash
 perl -E 'print "`"x3, "\n"'
-ttally --help
+python3 -m ttally --help
 perl -E 'print "`"x3, "\n"'
 ```
 
@@ -139,6 +139,19 @@ if [[ ! -e "${TTALLY_ALIASES}" ]]; then  # alias file doesn't exist
 fi
 [[ -e "${TTALLY_ALIASES}" ]] && source "${TTALLY_ALIASES}"  # if the file exists, make the aliases available
 ```
+
+### Caching
+
+`ttally update-cache` can be used to speedup the `export` and `recent` commands:
+
+```
+>>>PMARK
+perl -E 'print "`"x3, "\n"'
+python3 -m ttally update-cache --help
+perl -E 'print "`"x3, "\n"'
+```
+
+I personally run it once every 5 minutes in the background, so at least my first interaction with `ttally` is guaranteed to be [fast](https://github.com/seanbreckenridge/ttally/issues/5#issuecomment-1321389800)
 
 ### Shell Scripts
 

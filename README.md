@@ -178,16 +178,17 @@ Options:
   --help  Show this message and exit.
 
 Commands:
-  datafile    print the datafile location
-  edit        edit the datafile
-  export      export all data from a model
-  from-json   add item by piping JSON
-  generate    generate shell aliases
-  merge       merge all data for a model into one file
-  models      list models
-  prompt      tally an item
-  prompt-now  tally an item (now)
-  recent      print recently tallied items
+  datafile      print the datafile location
+  edit          edit the datafile
+  export        export all data from a model
+  from-json     add item by piping JSON
+  generate      generate shell aliases
+  merge         merge all data for a model into one file
+  models        list models
+  prompt        tally an item
+  prompt-now    tally an item (now)
+  recent        print recently tallied items
+  update-cache  cache export data
 ```
 
 ### Configuration
@@ -211,6 +212,23 @@ if [[ ! -e "${TTALLY_ALIASES}" ]]; then  # alias file doesn't exist
 fi
 [[ -e "${TTALLY_ALIASES}" ]] && source "${TTALLY_ALIASES}"  # if the file exists, make the aliases available
 ```
+
+### Caching
+
+`ttally update-cache` can be used to speedup the `export` and `recent` commands:
+
+```
+Usage: ttally update-cache [OPTIONS]
+
+  Caches data for 'export' and 'recent' by saving the current data and an
+  index to ~/.cache/ttally
+
+Options:
+  --print-hashes  print current filehash debug info
+  --help          Show this message and exit.
+```
+
+I personally run it once every 5 minutes in the background, so at least my first interaction with `ttally` is guaranteed to be [fast](https://github.com/seanbreckenridge/ttally/issues/5#issuecomment-1321389800)
 
 ### Shell Scripts
 

@@ -1,6 +1,6 @@
 import sys
 import json
-from typing import NamedTuple, Type, Optional, List, Sequence
+from typing import NamedTuple, Type, Optional, List, Sequence, Iterable, Any
 
 import click
 
@@ -149,10 +149,26 @@ def _recent(model: str, remove_attrs: str, count: int) -> None:
     """
     List recent items logged for this model
     """
+    # read from cache if cache isnt stale
+    from .cache import read_cache_json
     from .recent import query_print
 
+    from more_itertools import take, always_reversible
+
+    res: Optional[List[NamedTuple]] = None
+    try:
+        # reverse so it is ordered for query properly
+        from autotui.serialize import deserialize_namedtuple
+
+        res = [
+            deserialize_namedtuple(o, to=MODELS[model])
+            for o in take(count, always_reversible(read_cache_json(model)))
+        ]
+    except RuntimeError:
+        pass
+
     attrs = [a.strip() for a in remove_attrs.split(",") if a.strip()]
-    query_print(_model_from_string(model), count, remove_attrs=attrs)
+    query_print(_model_from_string(model), count, remove_attrs=attrs, cached_data=res)
 
 
 @main.command(short_help="export all data from a model")
@@ -168,12 +184,26 @@ def export(model: str, stream: bool) -> None:
     """
     List all the data from a model as JSON
     """
-    from autotui.fileio import namedtuple_sequence_dumps
-    from .autotui_ext import glob_namedtuple
 
-    itr = json.loads(
-        namedtuple_sequence_dumps(list(glob_namedtuple(_model_from_string(model))))
-    )
+    # read from cache if cache isnt stale
+    from .cache import read_cache_json
+
+    itr: Optional[Iterable[Any]] = None
+    try:
+        itr = read_cache_json(model)
+    except RuntimeError:
+        pass
+
+    # cache was stale, read from datafiles
+    if itr is None:
+        from autotui.fileio import namedtuple_sequence_dumps
+        from .autotui_ext import glob_namedtuple
+
+        itr = json.loads(
+            namedtuple_sequence_dumps(list(glob_namedtuple(_model_from_string(model))))
+        )
+
+    assert itr is not None
 
     if stream:
         for blob in itr:
@@ -232,6 +262,29 @@ def merge(model: str, sort_key: Optional[str]) -> None:
     click.echo(f"Wrote merged file to '{merge_target}'", err=True)
 
 
+@main.command(short_help="cache export data", name="update-cache")
+@click.option(
+    "--print-hashes",
+    is_flag=True,
+    default=False,
+    help="print current filehash debug info",
+)
+def update_cache(print_hashes: bool) -> None:
+    """
+    Caches data for 'export' and 'recent' by saving
+    the current data and an index to ~/.cache/ttally
+    """
+    from .cache import cache_sorted_exports, file_hashes
+
+    was_stale = cache_sorted_exports()
+    if was_stale:
+        click.echo("Cache was stale, updated", err=True)
+    else:
+        click.echo("Cache is already up to date", err=True)
+    if print_hashes:
+        click.echo(json.dumps(file_hashes()))
+
+
 @main.command(short_help="edit the datafile")
 @model_with_completion
 def edit(model: str) -> None:
@@ -243,7 +296,10 @@ def edit(model: str) -> None:
     _model_from_string(model)
     f = df(model.lower())
     if not f.exists():
-        click.secho(f"Warning: {f} doesn't exist", err=True, fg="red")
+        click.secho(f"Warning: {f} doesn't exist. ", err=True, fg="red")
+        if not click.confirm("Open anyways?"):
+            return
+
     click.edit(filename=str(f))
 
 

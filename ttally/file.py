@@ -2,7 +2,6 @@ import os
 import sys
 from functools import lru_cache
 from pathlib import Path
-from tempfile import gettempdir
 from typing import Optional, Iterator
 
 
@@ -58,15 +57,9 @@ def glob_datafiles(for_function: str, in_dir: Optional[Path] = None) -> Iterator
             yield d / f
 
 
-def ttally_cache_dir() -> Path:
-    cache_dir = Path(os.environ.get("XDG_CACHE_DIR", str(Path.home() / ".cache")))
-    ttally_cache_dir = cache_dir / "ttally"
-    if not ttally_cache_dir.exists():
-        ttally_cache_dir.mkdir(parents=True)
-    return ttally_cache_dir
-
-
 def ttally_temp_dir() -> Path:
+    from tempfile import gettempdir
+
     tdir = gettempdir()
     ttally_temp_dir = Path(tdir) / "ttally"
     if not ttally_temp_dir.exists():
