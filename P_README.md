@@ -37,7 +37,7 @@ Whenever I run any of those aliases, it inspects the model in the config file, d
 
 Currently, I use this to store info like whenever I eat something/drink water/my current weight/random thoughts periodically
 
-Given a `NamedTuple` defined in [`~/.config/ttally.py`](https://sean.fish/d/ttally.py?dark), this creates interactive interfaces which validate my input to save information to JSON/YAML files
+Given a `NamedTuple` defined in [`~/.config/ttally.py`](https://sean.fish/d/ttally.py?redirect), this creates interactive interfaces which validate my input to save information to JSON/YAML files
 
 The `{tuple}-now` aliases set the any `datetime` values for the prompted tuple to now
 
@@ -98,20 +98,21 @@ $ hpi query ttally.funcs.food --recent 1d -s | jq -r '(.quantity)*(.calories)' |
 
 If you'd prefer to use JSON files, you can set the `TTALLY_EXT=json` environment variable.
 
-This can still load data from YAML or JSON (or both), every couple months I'll combine all the versioned files to a single merged file using the `export` command:
+This can still load data from YAML or JSON (or both), every couple months I'll combine all the versioned files to a single merged file using the `merge` command:
 
 ```
-ttally export food > food_merged.json
+ttally merge food
 ```
 
 ## Installation
 
 ```bash
-pip install 'git+https://github.com/seanbreckenridge/ttally'
+pip install ttally
 ```
 
 ```
 >>>PMARK
+#!/usr/bin/env bash
 perl -E 'print "`"x3, "\n"'
 ttally --help
 perl -E 'print "`"x3, "\n"'

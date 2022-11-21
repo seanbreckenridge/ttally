@@ -3,19 +3,10 @@
 **TL;DR**: This converts a file like this (config file at `~/.config/ttally.py`):
 
 ```python
-# This defines some models for things I want to log often
-# which then generate into TUIs using:
 # https://github.com/seanbreckenridge/ttally
 
 from datetime import datetime
 from typing import NamedTuple
-
-from seanb.ttally_self import SelfTypes
-
-
-class Self(NamedTuple):
-    when: datetime
-    what: SelfTypes
 
 
 class Weight(NamedTuple):
@@ -23,27 +14,25 @@ class Weight(NamedTuple):
     pounds: float
 
 
-# this also tracks water, either by attaching it
-# to the corresponding food, or by just adding
-# something with the text 'water'
 class Food(NamedTuple):
     when: datetime
     calories: int
     food: str
     quantity: float
-    water: int  # ml
+    water: int  # how much ml of water was in this
 
-    # if I don't supply a quantity, default to 1
     @staticmethod
     def attr_validators() -> dict:
-        # https://sean.fish/d/ttally_types.py?redirect
+        # https://sean.fish/d/ttally_types.py?dark
         from seanb.ttally_types import prompt_float_default
 
+        # if I don't supply a quantity, default to 1
         return {"quantity": lambda: prompt_float_default("quantity")}
 
 
-# e.g. a concert or something
 class Event(NamedTuple):
+    """e.g. a concert or something"""
+
     event_type: str
     when: datetime
     description: str
@@ -56,6 +45,14 @@ class Event(NamedTuple):
         from seanb.ttally_types import edit_in_vim
 
         return {"comments": edit_in_vim}
+
+
+from seanb.ttally_self import SelfTypes
+
+
+class Self(NamedTuple):
+    when: datetime
+    what: SelfTypes
 ```
 
 to (shell aliases)...
