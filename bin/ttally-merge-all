@@ -4,4 +4,8 @@ while read -r model; do
 	# try to sort by 'when', otherwise just merge
 	ttally merge "$model" --sort-key when || ttally merge "$model"
 done < <(ttally models)
-[[ "$(on_machine)" =~ ^linux_* ]] && json-compress "${HPIDATA}/ttally/"*.json
+
+# compress data if on my linux machine
+# https://github.com/seanbreckenridge/on_machine
+# https://sean.fish/d/json-compress?redirect
+hash on_machine && hash json-compress && [[ "$(on_machine)" =~ ^linux_* ]] && json-compress "${HPIDATA}/ttally/"*.json
