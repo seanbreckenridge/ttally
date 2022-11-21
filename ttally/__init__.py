@@ -2,7 +2,6 @@
 
 import os
 import sys
-import warnings
 import importlib.util
 from pathlib import Path
 
@@ -12,9 +11,6 @@ URL = "https://github.com/seanbreckenridge/ttally"
 def get_conf_file() -> Path:
     cfg_file: str = os.environ.get("TTALLY_CFG", "~/.config/ttally.py")
     cfg_path = Path(cfg_file).expanduser().absolute()
-    if not cfg_path.parent.exists():
-        warnings.warn("Directory for configuration doesn't exist, creating...")
-        cfg_path.parent.mkdir()
     if not cfg_path.exists():
         raise FileNotFoundError(
             f"Expected configuration to exist at {cfg_path}, see {URL} for an example"
