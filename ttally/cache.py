@@ -77,7 +77,7 @@ def cache_sorted_exports() -> bool:
 
         all_data = {
             model_name: namedtuple_sequence_dumps(
-                glob_namedtuple_by_datetime(model_type, reverse=False), indent=""
+                glob_namedtuple_by_datetime(model_type, reverse=False), indent=None
             )
             for model_name, model_type in MODELS.items()
         }
