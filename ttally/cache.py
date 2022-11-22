@@ -1,7 +1,7 @@
 import os
 import json
 from pathlib import Path
-from typing import Dict, Optional, Set, Any, NamedTuple, Iterator, List
+from typing import Dict, Optional, Set, Any, List
 import shelve
 
 from .models import MODELS
