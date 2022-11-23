@@ -132,19 +132,25 @@ You need to setup a `~/.config/ttally.py` file. You can use the block above as a
 curl -s 'https://sean.fish/d/ttally.py' > ~/.config/ttally.py
 ```
 
-You can set the `TTALLY_DATA_DIR` environment variable to the directory that `ttally` should save data to, defaults to `~/.local/share/ttally`. If you want to use a different path for configuration, you can set the `TTALLY_CFG` to the absolute path to the file.
+To setup aliases; You can do it each time you launch you terminal like:
 
-I cache the generated aliases by putting a block like this in my shell config (i.e., it runs the first time I start a terminal, but then stays the same until I remove the file):
+```bash
+eval "$(python3 -m ttally generate)"
+```
+
+Or, 'cache' the generated aliases by putting a block like this in your shell config:
 
 ```bash
 TTALLY_ALIASES="${HOME}/.cache/ttally_aliases"
 if [[ ! -e "${TTALLY_ALIASES}" ]]; then  # alias file doesn't exist
-	if havecmd ttally; then  # if ttally is installed
-		python3 -m ttally generate >"${TTALLY_ALIASES}"  # generate and save the aliases
-	fi
+	python3 -m ttally generate >"${TTALLY_ALIASES}"  # generate and save the aliases
 fi
-[[ -e "${TTALLY_ALIASES}" ]] && source "${TTALLY_ALIASES}"  # if the file exists, make the aliases available
+source "${TTALLY_ALIASES}"  # make aliases available in your shell
 ```
+
+i.e., it runs the first time I open a terminal, but then stays the same until I remove the file
+
+You can set the `TTALLY_DATA_DIR` environment variable to the directory that `ttally` should save data to, defaults to `~/.local/share/ttally`. If you want to use a different path for configuration, you can set the `TTALLY_CFG` to the absolute path to the file.
 
 For shell completion to autocomplete options/model names:
 
