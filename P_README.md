@@ -33,11 +33,11 @@ Whenever I run any of those aliases, it inspects the model in the config file, d
 
 ---
 
-`ttally` is an interactive module using [`autotui`](https://github.com/seanbreckenridge/autotui) to save things I do often to YAML
+`ttally` is an interactive module using [`autotui`](https://github.com/seanbreckenridge/autotui) to save things I do often to YAML/JSON
 
 Currently, I use this to store info like whenever I eat something/drink water/my current weight/random thoughts periodically
 
-Given a `NamedTuple` defined in [`~/.config/ttally.py`](https://sean.fish/d/ttally.py?redirect), this creates interactive interfaces which validate my input to save information to JSON/YAML files
+Given a `NamedTuple` defined in [`~/.config/ttally.py`](https://sean.fish/d/ttally.py?redirect), this creates interactive interfaces which validate my input to save information to YAML/JSON files
 
 The `{tuple}-now` aliases set the any `datetime` values for the prompted tuple to now
 
