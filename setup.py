@@ -21,7 +21,6 @@ setup(
     install_requires=reqs,
     package_data={pkg: ["py.typed"]},
     entry_points={"console_scripts": ["ttally = ttally.__main__:main"]},
-    scripts=[str(f) for f in Path("bin").iterdir()],
     extras_require={
         "testing": [
             "mypy",
