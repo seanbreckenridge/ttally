@@ -22,6 +22,12 @@ setup(
     package_data={pkg: ["py.typed"]},
     entry_points={"console_scripts": ["ttally = ttally.__main__:main"]},
     scripts=[str(f) for f in Path("bin").iterdir()],
+    extras_require={
+        "testing": [
+            "mypy",
+            "flake8",
+        ]
+    },
     classifiers=[
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python",
