@@ -1,5 +1,3 @@
-# ttally
-
 **TL;DR**: This converts a file like this (config file at `~/.config/ttally.py`):
 
 ```python
@@ -72,24 +70,24 @@ alias weight-now='python3 -m ttally prompt-now weight'
 alias weight-recent='python3 -m ttally recent weight'
 ```
 
-Whenever I run any of those aliases, it inspects the model in the config file, dynamically creates and runs an interactive interface like this:
+Whenever I run any of those aliases, it inspects the model in the config file, and on-the-fly creates and runs an interactive interface like this:
 
 <img src="https://raw.githubusercontent.com/seanbreckenridge/autotui/master/.assets/builtin_demo.gif">
 
-... which saves some information I enter to a file:
+... which saves what I enter to a file:
 
 ```yaml
 - when: 1598856786,
   glasses": 2.0
 ```
 
----
+## ttally
 
 `ttally` is an interactive module using [`autotui`](https://github.com/seanbreckenridge/autotui) to save things I do often to YAML/JSON
 
-Currently, I use this to store info like whenever I eat something/drink water/my current weight/random thoughts periodically
+Currently, I use this to store info like whenever I eat something/drink water/my current weight/thoughts on concerts
 
-Given a `NamedTuple` defined in [`~/.config/ttally.py`](https://sean.fish/d/ttally.py?redirect), this creates interactive interfaces which validate my input to save information to YAML/JSON files
+Given a `NamedTuple` defined in [`~/.config/ttally.py`](https://sean.fish/d/ttally.py?redirect), this creates interactive interfaces which validates my input and saves it to a file
 
 The `{tuple}-now` aliases set the any `datetime` values for the prompted tuple to now
 
@@ -104,18 +102,24 @@ $ water-recent 5
 2021-03-19 16:05:34     1.0
 ```
 
-## Library Usage
+## Why/How
 
-The whole point of this interface is that it validates my input to types, stores it as a basic editable format (YAML), but is still loadable into typed python objects, with minimal boilerplate. I just need to add a NamedTuple to `~/.config/ttally.py`, and all the interactive interfaces and resulting YAML files are automatically created
+### Goals
 
-This intentionally uses YAML and doesn't store the info into a single "merged" database. A single database:
+- validates my user input to basic types
+- stores it as a user-editable format (YAML)
+- can be loaded into python as typed objects
+- minimal boilerplate to add a new model
+- can be synced across multiple machines without conflicts
+- allow completely custom types or prompts - see [autotui docs](https://github.com/seanbreckenridge/autotui#custom-types), [my custom prompts](https://sean.fish/d/ttally_types.py?redirect)
 
-- requires some way to edit/delete items - at that point I'm essentially re-implementing a CRUD interface _again_
-- makes it harder to merge them together ([I've tried](https://github.com/seanbreckenridge/calories-scripts/blob/master/calmerge))
+This intentionally uses YAML and doesn't store the info into a single "merged" database. That way:
 
-YAML isn't perfect but at least I can open it in vim and delete/edit some value. Since the YAML files are pretty-printed, its also pretty trivial to grep/duplicate items by copying a few lines around. Without writing a bunch of code, this seems like the least amount of friction to immediately create new interfaces
+- you can just open the YAML file and quickly change/edit some item, no need to re-invent a CRUD interface
+- files can be synced across machines and to my phone using [syncthing](https://syncthing.net/) without file conflicts
+- prevents issues with trying to merge multiple databases from different machines together ([I've tried](https://github.com/seanbreckenridge/calories-scripts/blob/master/calmerge))
 
-The YAML files are versioned with the date/OS/platform, so I'm able to add items on my linux, mac, or android (using [`termux`](https://termux.com/)) and sync them across all my devices using [`SyncThing`](https://syncthing.net/). Those look like:
+The YAML files are versioned with the date/OS/platform, so I'm able to add items on my linux, mac, or android (using [`termux`](https://termux.com/)) and sync them across all my devices using [`SyncThing`](https://syncthing.net/). Each device creates its own file it adds items to, like:
 
 ```
 food-darwin-seans-mbp.localdomain-2021-03.yaml
@@ -138,6 +142,8 @@ Food(when=datetime.datetime(2020, 9, 27, 6, 52, 16, tzinfo=datetime.timezone.utc
 Food(when=datetime.datetime(2020, 9, 27, 6, 53, 44, tzinfo=datetime.timezone.utc), calories=50, food='ginger chai')]
 ```
 
+... or into JSON using `ttally export food`
+
 The `from-json` command can be used to send this JSON which matches a model, i.e. providing a non-interactive interface to add items, in case I want to [call this from a script](bin/cz)
 
 `hpi query` from [`HPI`](https://github.com/seanbreckenridge/HPI) can be used with the `ttally.funcs` module, like:
@@ -150,7 +156,7 @@ $ hpi query ttally.funcs.food --recent 1d -s | jq -r '(.quantity)*(.calories)' |
 
 If you'd prefer to use JSON files, you can set the `TTALLY_EXT=json` environment variable.
 
-This can still load data from YAML or JSON (or both), every couple months I'll combine all the versioned files to a single merged file using the `merge` command:
+This can load data from YAML or JSON (or both at the same time), every couple months I'll combine all the versioned files to a single merged file using the `merge` command:
 
 ```
 ttally merge food
