@@ -39,19 +39,21 @@ def ttally_merged_path(model: str) -> Path:
 
 
 # creates unique datafiles for each platform
-def datafile(for_function: str, in_dir: Optional[Path] = None) -> Path:
+def datafile(for_function: str, data_dir: Optional[Path] = None) -> Path:
     # add some OS/platform specific code to this, to prevent
     # conflicts across computers while using syncthing
     # this also decreases the amount of items that have
     # to be loaded into memory for load_prompt_and_writeback
     ext = os.environ.get("TTALLY_EXT", "yaml")
     u = f"{for_function}-{versioned_timestamp()}.{ext}"
-    return Path(in_dir or ttally_abs()).absolute() / u
+    return Path(data_dir or ttally_abs()).absolute() / u
 
 
 # globs all datafiles for some for_function
-def glob_datafiles(for_function: str, in_dir: Optional[Path] = None) -> Iterator[Path]:
-    d: Path = Path(in_dir or ttally_abs()).absolute()
+def glob_datafiles(
+    for_function: str, data_dir: Optional[Path] = None
+) -> Iterator[Path]:
+    d: Path = Path(data_dir or ttally_abs()).absolute()
     for f in os.listdir(d):
         if f.startswith(for_function):
             yield d / f

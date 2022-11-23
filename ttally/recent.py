@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import List, NamedTuple, Type, Callable, Any, Optional
 from datetime import datetime
 
@@ -31,17 +32,23 @@ def _extract_dt_from(nt: Type[NamedTuple]) -> Callable[[NamedTuple], datetime]:
 
 
 def glob_namedtuple_by_datetime(
-    nt: Type[NamedTuple], reverse: bool = False
+    nt: Type[NamedTuple], reverse: bool = False, data_dir: Optional[Path] = None
 ) -> List[NamedTuple]:
     from .autotui_ext import glob_namedtuple
 
-    return sorted(glob_namedtuple(nt), key=_extract_dt_from(nt), reverse=reverse)
+    return sorted(
+        glob_namedtuple(nt, data_dir=data_dir),
+        key=_extract_dt_from(nt),
+        reverse=reverse,
+    )
 
 
-def query_recent(nt: Type[NamedTuple], count: int) -> List[NamedTuple]:
+def query_recent(
+    nt: Type[NamedTuple], count: int, data_dir: Optional[Path] = None
+) -> List[NamedTuple]:
     """query the module for recent entries (based on datetime) from a namedtuple"""
     items: List[NamedTuple] = more_itertools.take(
-        count, glob_namedtuple_by_datetime(nt, reverse=True)
+        count, glob_namedtuple_by_datetime(nt, reverse=True, data_dir=data_dir)
     )
     return items
 
@@ -50,12 +57,13 @@ def query_print(
     nt: Type[NamedTuple],
     count: int,
     remove_attrs: List[str],
+    data_dir: Optional[Path] = None,
     cached_data: Optional[List[NamedTuple]] = None,
 ) -> None:
     # assumes that there is a datetime attribute on this, else
     # we have nothing to sort by
     if cached_data is None:
-        res = more_itertools.peekable(iter(query_recent(nt, count)))
+        res = more_itertools.peekable(iter(query_recent(nt, count, data_dir=data_dir)))
     else:
         res = more_itertools.peekable(more_itertools.take(count, cached_data))
     try:

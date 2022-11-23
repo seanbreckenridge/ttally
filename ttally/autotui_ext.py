@@ -30,12 +30,12 @@ def prompt_now(nt: Type[NamedTuple]) -> None:
 
 # takes one of the models.py and loads all data from it
 def glob_namedtuple(
-    nt: Type[NamedTuple], in_dir: Optional[Path] = None
+    nt: Type[NamedTuple], data_dir: Optional[Path] = None
 ) -> Iterator[NamedTuple]:
     yield from chain(
         *map(
             lambda p: load_from(nt, p, allow_empty=True),
-            glob_datafiles(namedtuple_func_name(nt), in_dir=in_dir),
+            glob_datafiles(namedtuple_func_name(nt), data_dir=data_dir),
         )
     )
 

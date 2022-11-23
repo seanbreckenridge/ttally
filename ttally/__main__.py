@@ -11,7 +11,10 @@ def _model_from_string(model_name: str) -> Type[NamedTuple]:
     try:
         return MODELS[model_name]
     except KeyError:
-        click.echo(f"Could not find a model named {model_name}", err=True)
+        click.echo(
+            f"Could not find a model named {model_name}. Known models: {', '.join(MODELS)}",
+            err=True,
+        )
         sys.exit(1)
 
 
@@ -97,9 +100,8 @@ def datafile(model: str) -> None:
     """
     from .file import datafile as df
 
-    m = model.lower()
-    assert m in MODELS, f"Couldn't find model {m}"
-    f = df(m)
+    _model_from_string(model)
+    f = df(model)
     if not f.exists():
         click.secho(f"Warning: {f} doesn't exist", err=True, fg="red")
     click.echo(f)
@@ -162,7 +164,7 @@ def _recent(model: str, remove_attrs: str, count: int) -> None:
 
         res = [
             deserialize_namedtuple(o, to=MODELS[model])
-            for o in take(count, always_reversible(read_cache_json(model)))
+            for o in take(count, always_reversible(read_cache_json(model=model)))
         ]
     except RuntimeError:
         pass
@@ -190,7 +192,7 @@ def export(model: str, stream: bool) -> None:
 
     itr: Optional[Iterable[Any]] = None
     try:
-        itr = read_cache_json(model)
+        itr = read_cache_json(model=model)
     except RuntimeError:
         pass
 
@@ -299,7 +301,7 @@ def edit(model: str) -> None:
     from .file import datafile as df
 
     _model_from_string(model)
-    f = df(model.lower())
+    f = df(model)
     if not f.exists():
         click.secho(f"Warning: {f} doesn't exist. ", err=True, fg="red")
         if not click.confirm("Open anyways?"):
