@@ -7,5 +7,5 @@ done < <(ttally models)
 
 # compress data if on my linux machine
 # https://github.com/seanbreckenridge/on_machine
-# https://sean.fish/d/json-compress?redirect
+# https://github.com/seanbreckenridge/core/blob/main/shellscripts/json-compress
 hash on_machine && hash json-compress && [[ "$(on_machine)" =~ ^linux_* ]] && json-compress "${HPIDATA}/ttally/"*.json
