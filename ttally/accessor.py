@@ -41,23 +41,39 @@ class Accessor:
         name: str,
         module_name: str,
         config_file: str,
+        data_dir: Optional[str] = None,
         data_dir_environment_variable: str = "TTALLY_DATA_DIR",
         data_dir_default="~/.local/share/ttally",
         merged_extesion: "Format" = "json",
         extension: Optional["Format"] = None,
     ) -> None:
+
+        # config
         self.name = name
         self.module_name = module_name
         self.config_file = config_file
         self.extension: Optional["Format"] = extension
+
+        # extensions
         if extension is None and "TTALLY_EXT" in os.environ:
             self.extension = cast("Format", os.environ["TTALLY_EXT"])
         self.merged_extension = merged_extesion
+
+        # load config
         self.config_module = self.import_config()
-        assert self.config_module is not None, f"{self.config_module} failed to import from {self.config_file}"
-        self.data_dir_environment_variable = data_dir_environment_variable
-        self.data_dir_default = data_dir_default
-        self.cache_dir = self.ttally_cache_dir()
+        assert (
+            self.config_module is not None
+        ), f"{self.config_module} failed to import from {self.config_file}"
+
+        # compute data/cache directories
+        if data_dir is None:
+            self.data_dir: Path = self.compute_data_dir(
+                data_dir_environment_variable, data_dir_default
+            )
+        else:
+            self.data_dir = Path(data_dir)
+        self.cache_dir = self.compute_cache_dir()
+        self.hash_file = str(self.cache_dir / "ttally_hash.pickle")
 
         self.MODELS: Dict[str, Type[NamedTuple]] = {
             name.casefold(): klass
@@ -93,11 +109,11 @@ class Accessor:
         return str(nt.__name__.casefold())
 
     # load, prompt and writeback one of the models
-    def prompt(self, nt: Type[NamedTuple], data_dir: Optional[Path] = None) -> None:
+    def prompt(self, nt: Type[NamedTuple]) -> None:
 
         from autotui.shortcuts import load_prompt_and_writeback
 
-        f: Path = self.datafile(self.namedtuple_func_name(nt), data_dir=data_dir)
+        f: Path = self.datafile(self.namedtuple_func_name(nt))
         load_prompt_and_writeback(nt, f)
 
     # prompt, but set the datetime for the resulting nametuple to now
@@ -109,9 +125,7 @@ class Accessor:
         load_prompt_and_writeback(nt, p, type_use_values={datetime: datetime.now})
 
     # takes one of the models.py and loads all data from it
-    def glob_namedtuple(
-        self, nt: Type[NamedTuple], data_dir: Optional[Path] = None
-    ) -> Iterator[NamedTuple]:
+    def glob_namedtuple(self, nt: Type[NamedTuple]) -> Iterator[NamedTuple]:
 
         from autotui.shortcuts import load_from
         from itertools import chain
@@ -119,7 +133,7 @@ class Accessor:
         yield from chain(
             *map(
                 lambda p: load_from(nt, p, allow_empty=True),
-                self.glob_datafiles(self.namedtuple_func_name(nt), data_dir=data_dir),
+                self.glob_datafiles(self.namedtuple_func_name(nt)),
             )
         )
 
@@ -164,11 +178,10 @@ class Accessor:
         TIMESTAMP = datetime.strftime(datetime.now(), "%Y-%m")
         return f"{OS}-{HOSTNAME}-{TIMESTAMP}"
 
-    @lru_cache(1)
-    def ttally_abs(self) -> Path:
-        ddir: str = os.environ.get(
-            self.data_dir_environment_variable, self.data_dir_default
-        )
+    def compute_data_dir(
+        self, environment_variable: str, data_dir_default: str
+    ) -> Path:
+        ddir: str = os.environ.get(environment_variable, data_dir_default)
         p = Path(ddir).expanduser().absolute()
         if not p.exists():
             import warnings
@@ -178,26 +191,22 @@ class Accessor:
         return p
 
     def ttally_merged_path(self, model: str) -> Path:
-        return self.ttally_abs() / f"{model}-merged.{self.merged_extension}"
+        return self.data_dir / f"{model}-merged.{self.merged_extension}"
 
     # creates unique datafiles for each platform
-    def datafile(self, for_function: str, data_dir: Optional[Path] = None) -> Path:
+    def datafile(self, for_function: str) -> Path:
         # add some OS/platform specific code to this, to prevent
         # conflicts across computers while using syncthing
         # this also decreases the amount of items that have
         # to be loaded into memory for load_prompt_and_writeback
         ext = os.environ.get("TTALLY_EXT", "yaml")
-        u = f"{for_function}-{self.versioned_timestamp()}.{ext}"
-        return Path(data_dir or self.ttally_abs()).absolute() / u
+        return self.data_dir / f"{for_function}-{self.versioned_timestamp()}.{ext}"
 
     # globs all datafiles for some for_function
-    def glob_datafiles(
-        self, for_function: str, data_dir: Optional[Path] = None
-    ) -> Iterator[Path]:
-        d: Path = Path(data_dir or self.ttally_abs()).absolute()
-        for f in os.listdir(d):
+    def glob_datafiles(self, for_function: str) -> Iterator[Path]:
+        for f in os.listdir(self.data_dir):
             if f.startswith(for_function):
-                yield d / f
+                yield self.data_dir / f
 
     def ttally_temp_dir(self) -> Path:
         from tempfile import gettempdir
@@ -210,10 +219,13 @@ class Accessor:
 
     # FUNCS
 
-    def __getattr__(self, name: str) -> Any:
-        if name in self.MODELS:
-            return lambda: self.glob_namedtuple(self.MODELS[name])
-        raise AttributeError(f"No such attribute {name}")
+    def funccreator(self) -> Callable[[str], Callable[[], Iterator[NamedTuple]]]:
+        def model_iterator(name: str) -> Callable[[], Iterator[NamedTuple]]:
+            if name in self.MODELS:
+                return lambda: self.glob_namedtuple(self.MODELS[name])
+            raise AttributeError(f"No such attribute {name}")
+
+        return model_iterator
 
     # CODEGEN
 
@@ -258,23 +270,19 @@ class Accessor:
         self,
         nt: Type[NamedTuple],
         reverse: bool = False,
-        data_dir: Optional[Path] = None,
     ) -> List[NamedTuple]:
-
         return sorted(
-            self.glob_namedtuple(nt, data_dir=data_dir),
+            self.glob_namedtuple(nt),
             key=self._extract_dt_from(nt),
             reverse=reverse,
         )
 
-    def query_recent(
-        self, nt: Type[NamedTuple], count: int, data_dir: Optional[Path] = None
-    ) -> List[NamedTuple]:
+    def query_recent(self, nt: Type[NamedTuple], count: int) -> List[NamedTuple]:
         import more_itertools
 
         """query the module for recent entries (based on datetime) from a namedtuple"""
         items: List[NamedTuple] = more_itertools.take(
-            count, self.glob_namedtuple_by_datetime(nt, reverse=True, data_dir=data_dir)
+            count, self.glob_namedtuple_by_datetime(nt, reverse=True)
         )
         return items
 
@@ -283,7 +291,6 @@ class Accessor:
         nt: Type[NamedTuple],
         count: int,
         remove_attrs: List[str],
-        data_dir: Optional[Path] = None,
         cached_data: Optional[List[NamedTuple]] = None,
     ) -> None:
         import more_itertools
@@ -291,9 +298,7 @@ class Accessor:
         # assumes that there is a datetime attribute on this, else
         # we have nothing to sort by
         if cached_data is None:
-            res = more_itertools.peekable(
-                iter(self.query_recent(nt, count, data_dir=data_dir))
-            )
+            res = more_itertools.peekable(iter(self.query_recent(nt, count)))
         else:
             res = more_itertools.peekable(more_itertools.take(count, cached_data))
         try:
@@ -313,21 +318,23 @@ class Accessor:
             print(datetime.fromtimestamp(getattr(o, dt_attr).timestamp()), end="\t")
             print(" \t".join([str(getattr(o, a)) for a in other_attrs]))
 
-    base_cache_dir = Path(os.environ.get("XDG_CACHE_DIR", str(Path.home() / ".cache")))
+    def compute_cache_dir(self) -> Path:
+        base_cache_dir = Path(
+            os.environ.get("XDG_CACHE_DIR", str(Path.home() / ".cache"))
+        )
 
-    def ttally_cache_dir(self) -> Path:
         ttally_cache_dir = Path(
-            os.environ.get("TTALLY_CACHE_DIR", self.__class__.base_cache_dir / "ttally")
+            os.environ.get("TTALLY_CACHE_DIR", base_cache_dir / "ttally")
         )
         if not ttally_cache_dir.exists():
             ttally_cache_dir.mkdir(parents=True)
         return ttally_cache_dir
 
-    def file_hash(self, *, model: str, data_dir: Optional[Path] = None) -> str:
+    def file_hash(self, *, model: str) -> str:
         """
         A unique representation of the current files/timestamp for a model
         """
-        files = list(self.glob_datafiles(model, data_dir=data_dir))
+        files = list(self.glob_datafiles(model))
         files_stat = [(f, f.stat().st_mtime) for f in files]
         files_stat.sort(key=lambda t: t[1])
         return "|".join(f"{f}:{st}" for (f, st) in files_stat)
@@ -336,22 +343,18 @@ class Accessor:
         self,
         *,
         models: Optional[Dict[str, Type[NamedTuple]]] = None,
-        data_dir: Optional[Path] = None,
         for_models: Optional[Set[str]] = None,
     ) -> FileHashes:
         if models is None:
             models = self.MODELS
         if for_models:
             return {
-                model: self.file_hash(model=model, data_dir=data_dir)
+                model: self.file_hash(model=model)
                 for model in models
                 if model in for_models
             }
         else:
-            return {
-                model: self.file_hash(model=model, data_dir=data_dir)
-                for model in models
-            }
+            return {model: self.file_hash(model=model) for model in models}
 
     def cache_is_stale(
         self,
@@ -359,18 +362,14 @@ class Accessor:
         hashes: Optional[FileHashes] = None,
         for_models: Optional[Set[str]] = None,
         models: Optional[Dict[str, Type[NamedTuple]]] = None,
-        data_dir: Optional[Path] = None,
-        cache_dir: Optional[Path] = None,
     ) -> bool:
 
         cache_stale = False
         if models is None:
             models = self.MODELS
 
-        with shelve.open(self.hash_file(cache_dir=cache_dir)) as db:
-            fh = hashes or self.file_hashes(
-                for_models=for_models, models=models, data_dir=data_dir
-            )
+        with shelve.open(self.hash_file) as db:
+            fh = hashes or self.file_hashes(for_models=for_models, models=models)
             db_hashes: FileHashes = db.get("hash", {})
             for model, current_hash in fh.items():
                 if for_models and model not in for_models:
@@ -381,61 +380,43 @@ class Accessor:
 
         return cache_stale
 
-    @lru_cache(maxsize=None)
-    def hash_file(self, cache_dir: Optional[Path] = None) -> str:
-        cdir = cache_dir if cache_dir is not None else self.cache_dir
-        return str(cdir / "ttally_hash.pickle")
-
     def save_hashes(
         self,
         *,
         hashes: Optional[FileHashes] = None,
         models: Optional[Dict[str, Type[NamedTuple]]] = None,
-        cache_dir: Optional[Path] = None,
-        data_dir: Optional[Path] = None,
     ) -> None:
-        cdir = cache_dir if cache_dir is not None else self.cache_dir
-        with shelve.open(self.hash_file(cache_dir=cdir)) as db:
-            db["hash"] = hashes or self.file_hashes(models=models, data_dir=data_dir)
+        with shelve.open(self.hash_file) as db:
+            db["hash"] = hashes or self.file_hashes(models=models)
 
     def cache_sorted_exports(
         self,
         *,
         models: Optional[Dict[str, Type[NamedTuple]]] = None,
-        data_dir: Optional[Path] = None,
-        cache_dir: Optional[Path] = None,
     ) -> bool:
 
         if models is None:
             models = self.MODELS
 
-        fh = self.file_hashes(models=models, data_dir=data_dir)
-        cache_stale = self.cache_is_stale(
-            hashes=fh, models=models, data_dir=data_dir, cache_dir=cache_dir
-        )
+        fh = self.file_hashes(models=models)
+        cache_stale = self.cache_is_stale(hashes=fh, models=models)
 
         if cache_stale:
             from autotui.fileio import namedtuple_sequence_dumps
 
-            cdir = cache_dir if cache_dir is not None else self.cache_dir
-
             all_data = {
                 model_name: namedtuple_sequence_dumps(
-                    self.glob_namedtuple_by_datetime(
-                        model_type, reverse=False, data_dir=data_dir
-                    ),
+                    self.glob_namedtuple_by_datetime(model_type, reverse=False),
                     indent=None,
                 )
                 for model_name, model_type in models.items()
             }
 
             for model, model_data in all_data.items():
-                with open(cdir / f"{model}-cache.json", "w") as f:
+                with open(self.cache_dir / f"{model}-cache.json", "w") as f:
                     f.write(model_data)
 
-            self.save_hashes(
-                hashes=fh, models=models, cache_dir=cache_dir, data_dir=data_dir
-            )
+            self.save_hashes(hashes=fh, models=models)
         return cache_stale
 
     def read_cache_str(
@@ -443,14 +424,11 @@ class Accessor:
         *,
         model: str,
         models: Optional[Dict[str, Type[NamedTuple]]] = None,
-        data_dir: Optional[Path] = None,
-        cache_dir: Optional[Path] = None,
     ) -> str:
-        cdir = cache_dir if cache_dir is not None else self.cache_dir
-        fh = self.file_hashes(for_models={model}, models=models, data_dir=data_dir)
+        fh = self.file_hashes(for_models={model}, models=models)
         if self.cache_is_stale(hashes=fh, for_models={model}):
             raise RuntimeError("Cache is Stale")
-        cache_file = cdir / f"{model}-cache.json"
+        cache_file = self.cache_dir / f"{model}-cache.json"
         if not cache_file.exists():
             raise RuntimeError("Cache file does not exist")
         return cache_file.read_text()
@@ -471,13 +449,9 @@ class Accessor:
         *,
         model: str,
         models: Optional[Dict[str, Type[NamedTuple]]] = None,
-        data_dir: Optional[Path] = None,
-        cache_dir: Optional[Path] = None,
     ) -> List[Dict[str, Any]]:
         data: List[Dict[str, Any]] = self.__class__._load_json(
-            self.read_cache_str(
-                model=model, models=models, data_dir=data_dir, cache_dir=cache_dir
-            )
+            self.read_cache_str(model=model, models=models)
         )
         return data
 
