@@ -4,6 +4,7 @@ while read -r model; do
 	# try to sort by 'when', otherwise just merge
 	ttally merge "$model" --sort-key when || ttally merge "$model"
 done < <(ttally models)
+ttally update-cache
 
 # compress data if on my linux machine
 # https://github.com/seanbreckenridge/on_machine

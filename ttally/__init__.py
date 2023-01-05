@@ -1,53 +1,53 @@
 # hook to load information from tally configuration
 
-import os
 import sys
 import importlib.util
-from pathlib import Path
+from typing import Callable, Set, Any
 
-URL = "https://github.com/seanbreckenridge/ttally"
-
-
-def get_conf_file() -> Path:
-    cfg_file: str = os.environ.get("TTALLY_CFG", "~/.config/ttally.py")
-    cfg_path = Path(cfg_file).expanduser().absolute()
-    if not cfg_path.exists():
-        raise FileNotFoundError(
-            f"Expected configuration to exist at {cfg_path}, see {URL} for an example"
-        )
-    return cfg_path
+from .default_config import ttally_config_path, URL
 
 
-def setup_config() -> None:
-    conf: Path = get_conf_file()
-    sconf: str = str(conf)
+LOADED: Set[str] = set()
 
-    mname = "ttally.config"
-    # redirect import
-    if mname in sys.modules:
-        del sys.modules[mname]
+
+def _load_config_module(
+    file: str, module_name: str, test_import_func: Callable[[], None]
+) -> Any:
+    if module_name in LOADED:
+        return sys.modules[module_name]
+
+    # reload?
+    if module_name in sys.modules:
+        del sys.modules[module_name]
+
     try:
-        spec = importlib.util.spec_from_file_location(mname, sconf)
+        spec = importlib.util.spec_from_file_location(module_name, file)
         assert spec is not None
         mod = importlib.util.module_from_spec(spec)
-        err = "Error importing configuration, must be on python3.5+?"
-        assert spec.loader is not None, err
-        # not sure why mypy is using the legacy (<3.4) types here?
-        # https://docs.python.org/3/library/importlib.html#importlib.abc.Loader
-        spec.loader.exec_module(mod)  # type: ignore[attr-defined]
-        if mname not in sys.modules:
-            sys.modules[mname] = mod
+        assert (
+            spec.loader is not None
+        ), "Error importing configuration, must be on python3.5+?"
+        spec.loader.exec_module(mod)
+        if module_name not in sys.modules:
+            sys.modules[module_name] = mod
+
         # make sure its importable
-        import ttally.config  # noqa
+        test_import_func()
+        LOADED.add(module_name)
+        return mod
     except ImportError as e:
         raise ImportError(
-            f"""
-Importing 'ttally.config' failed! (error: {e}).
-This file is typically located at  ~/.config/ttally.py, see {URL} for
-more information
-"""
+            f"""Importing '{module_name}' from '{file}' failed! (error: {e}).
+See {URL} for more information"""
         )
 
 
-setup_config()
-del setup_config
+def setup_ttally_config() -> None:
+    def _test_import() -> None:
+        import ttally.config
+
+    _load_config_module(ttally_config_path, "ttally.config", _test_import)
+
+
+setup_ttally_config()
+del setup_ttally_config
