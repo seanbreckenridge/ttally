@@ -42,7 +42,7 @@ class Accessor:
         config_file: str,
         data_dir: Optional[str] = None,
         data_dir_environment_variable: str = "TTALLY_DATA_DIR",
-        data_dir_default: str= "~/.local/share/ttally",
+        data_dir_default: str = "~/.local/share/ttally",
         merged_extesion: "Format" = "json",
         extension: Optional["Format"] = None,
     ) -> None:
