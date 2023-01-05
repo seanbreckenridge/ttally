@@ -1,6 +1,6 @@
 import sys
 import json
-from typing import NamedTuple, Type, Optional, List, Sequence, Iterable, Any
+from typing import NamedTuple, Optional, List, Sequence, Iterable, Any
 
 import click
 

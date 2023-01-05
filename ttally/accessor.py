@@ -91,11 +91,8 @@ class Accessor:
             self.config_file, self.module_name, self.check_import
         )
 
-    # the default implementation for this is in ttally/__init__.py
-    # since its loaded when the module is imported it doesnt need to
-    # be overriden here
     def check_import(self) -> None:
-        raise NotImplementedError
+        import ttally.config  # type: ignore[import]
 
     @staticmethod
     def _is_model(o: Any) -> bool:

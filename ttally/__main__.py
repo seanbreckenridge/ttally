@@ -8,6 +8,11 @@ accessor = Accessor(
     extension=None,
 )
 
+# use with hpi query, like:
+# hpi query ttally.__main__.food
+def __getattr__(name: str):
+    return accessor.funccreator()(name)
+
 
 def main() -> None:
     accessor.cli_wrap(prog_name="ttally")
