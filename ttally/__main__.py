@@ -1,14 +1,8 @@
 from typing import Iterator, NamedTuple, Callable
 
-from .accessor import Accessor
-from .default_config import ttally_config_path
+from .core import Extension
 
-accessor = Accessor(
-    name="ttally",
-    module_name="ttally.config",
-    config_file=ttally_config_path,
-    extension=None,
-)
+ext = Extension()
 
 
 def __getattr__(name: str) -> Callable[[], Iterator[NamedTuple]]:
@@ -16,11 +10,11 @@ def __getattr__(name: str) -> Callable[[], Iterator[NamedTuple]]:
     use with hpi query, like:
     hpi query ttally.__main__.food
     """
-    return accessor.funccreator()(name)
+    return ext.funccreator()(name)
 
 
 def main() -> None:
-    accessor.cli_wrap(prog_name="ttally")
+    ext.wrap_cli(prog_name="ttally")
 
 
 if __name__ == "__main__":

@@ -4,10 +4,10 @@ from typing import NamedTuple, Optional, List, Sequence, Iterable, Any
 
 import click
 
-from .accessor import Accessor
+from .core import Extension
 
 
-def wrap_accessor(*, accessor: Accessor) -> click.Group:
+def wrap_accessor(*, extension: Extension) -> click.Group:
     @click.group()
     def call_main() -> None:
         """
@@ -28,14 +28,14 @@ def wrap_accessor(*, accessor: Accessor) -> click.Group:
         """
         Generate the shell aliases!
         """
-        for a in accessor.generate_shell_aliases():
+        for a in extension.generate_shell_aliases():
             print(a)
 
     def _model_complete(
         ctx: click.Context, args: Sequence[str], incomplete: str
     ) -> List[str]:
         return [
-            m for m in accessor._autocomplete_model_names() if m.startswith(incomplete)
+            m for m in extension._autocomplete_model_names() if m.startswith(incomplete)
         ]
 
     model_with_completion = click.argument("MODEL", shell_complete=_model_complete)
@@ -66,13 +66,15 @@ def wrap_accessor(*, accessor: Accessor) -> click.Group:
         """
 
         if file is None:
-            accessor.save_from(
-                accessor._model_from_string(model), use_input=sys.stdin, partial=partial
+            extension.save_from(
+                extension._model_from_string(model),
+                use_input=sys.stdin,
+                partial=partial,
             )
         else:
             with open(file, "r") as f:
-                accessor.save_from(
-                    accessor._model_from_string(model), use_input=f, partial=partial
+                extension.save_from(
+                    extension._model_from_string(model), use_input=f, partial=partial
                 )
 
     @call_main.command(short_help="print the datafile location")
@@ -81,8 +83,8 @@ def wrap_accessor(*, accessor: Accessor) -> click.Group:
         """
         Print the location of the current datafile for some model
         """
-        accessor._model_from_string(model)
-        f = accessor.datafile(model)
+        extension._model_from_string(model)
+        f = extension.datafile(model)
         if not f.exists():
             click.secho(f"Warning: {f} doesn't exist", err=True, fg="red")
         click.echo(f)
@@ -93,14 +95,14 @@ def wrap_accessor(*, accessor: Accessor) -> click.Group:
         """
         Prompt for every field in the given model
         """
-        accessor.prompt(accessor._model_from_string(model))
+        extension.prompt(extension._model_from_string(model))
 
     @call_main.command(name="models", help="list models")
     def _models_cmd() -> None:
         """
         List all ttally models
         """
-        click.echo("\n".join(accessor._autocomplete_model_names()))
+        click.echo("\n".join(extension._autocomplete_model_names()))
 
     @call_main.command(name="prompt-now", help="tally an item (now)")
     @model_with_completion
@@ -108,7 +110,7 @@ def wrap_accessor(*, accessor: Accessor) -> click.Group:
         """
         Prompt for every field in the model, except datetime, which should default to now
         """
-        accessor.prompt_now(accessor._model_from_string(model))
+        extension.prompt_now(extension._model_from_string(model))
 
     @call_main.command(name="recent", short_help="print recently tallied items")
     @model_with_completion
@@ -132,17 +134,17 @@ def wrap_accessor(*, accessor: Accessor) -> click.Group:
             from autotui.serialize import deserialize_namedtuple
 
             res = [
-                deserialize_namedtuple(o, to=accessor.MODELS[model])
+                deserialize_namedtuple(o, to=extension.MODELS[model])
                 for o in take(
-                    count, always_reversible(accessor.read_cache_json(model=model))
+                    count, always_reversible(extension.read_cache_json(model=model))
                 )
             ]
         except RuntimeError:
             pass
 
         attrs = [a.strip() for a in remove_attrs.split(",") if a.strip()]
-        accessor.query_print(
-            accessor._model_from_string(model),
+        extension.query_print(
+            extension._model_from_string(model),
             count,
             remove_attrs=attrs,
             cached_data=res,
@@ -165,7 +167,7 @@ def wrap_accessor(*, accessor: Accessor) -> click.Group:
         # read from cache if cache isnt stale
         itr: Optional[Iterable[Any]] = None
         try:
-            itr = accessor.read_cache_json(model=model)
+            itr = extension.read_cache_json(model=model)
         except RuntimeError:
             pass
 
@@ -175,7 +177,7 @@ def wrap_accessor(*, accessor: Accessor) -> click.Group:
 
             itr = json.loads(
                 namedtuple_sequence_dumps(
-                    list(accessor.glob_namedtuple(accessor._model_from_string(model)))
+                    list(extension.glob_namedtuple(extension._model_from_string(model)))
                 )
             )
 
@@ -204,14 +206,14 @@ def wrap_accessor(*, accessor: Accessor) -> click.Group:
 
         from autotui.fileio import namedtuple_sequence_dumps
 
-        datafiles: List[Path] = list(accessor.glob_datafiles(model))
+        datafiles: List[Path] = list(extension.glob_datafiles(model))
         if len(datafiles) == 0:
             click.echo(f"No datafiles for model {model}", err=True)
             return
 
         data = json.loads(
             namedtuple_sequence_dumps(
-                list(accessor.glob_namedtuple(accessor._model_from_string(model)))
+                list(extension.glob_namedtuple(extension._model_from_string(model)))
             )
         )
 
@@ -221,7 +223,7 @@ def wrap_accessor(*, accessor: Accessor) -> click.Group:
             data = list(sorted(data, key=lambda obj: obj[sort_key]))  # type: ignore[no-any-return]
 
         epoch = int(datetime.now().timestamp())
-        cachefile = accessor.ttally_temp_dir() / f"{model}-{epoch}-merged.json"
+        cachefile = extension.temp_dir() / f"{model}-{epoch}-merged.json"
 
         click.echo(f"Writing backup to '{cachefile}'", err=True)
         with cachefile.open("w") as backup_f:
@@ -232,7 +234,7 @@ def wrap_accessor(*, accessor: Accessor) -> click.Group:
             click.echo(f"Removing '{rmf}'", err=True)
             rmf.unlink()
 
-        merge_target = accessor.ttally_merged_path(model)
+        merge_target = extension.ttally_merged_path(model)
         with merge_target.open("w") as merged_f:
             json.dump(data, merged_f)
 
@@ -252,7 +254,7 @@ def wrap_accessor(*, accessor: Accessor) -> click.Group:
 
         exit code 0 if cache was updated, 2 if it was already up to date
         """
-        was_stale = accessor.cache_sorted_exports()
+        was_stale = extension.cache_sorted_exports()
         ret = 0
         if was_stale:
             click.echo("Cache was stale, updated", err=True)
@@ -260,7 +262,7 @@ def wrap_accessor(*, accessor: Accessor) -> click.Group:
             click.echo("Cache is already up to date", err=True)
             ret = 2
         if print_hashes:
-            click.echo(json.dumps(accessor.file_hashes()))
+            click.echo(json.dumps(extension.file_hashes()))
         sys.exit(ret)
 
     @call_main.command(short_help="edit the datafile")
@@ -269,8 +271,8 @@ def wrap_accessor(*, accessor: Accessor) -> click.Group:
         """
         Edit the current datafile with your editor
         """
-        accessor._model_from_string(model)
-        f = accessor.datafile(model)
+        extension._model_from_string(model)
+        f = extension.datafile(model)
         if not f.exists():
             click.secho(f"Warning: {f} doesn't exist. ", err=True, fg="red")
             if not click.confirm("Open anyways?"):

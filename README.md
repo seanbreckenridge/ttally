@@ -22,7 +22,7 @@ class Food(NamedTuple):
     @staticmethod
     def attr_validators() -> dict:
         # https://sean.fish/d/ttally_types.py?redirect
-        from seanb.ttally_types import prompt_float_default
+        from my.config.seanb.ttally_types import prompt_float_default  # type: ignore
 
         # if I don't supply a quantity, default to 1
         return {"quantity": lambda: prompt_float_default("quantity")}
@@ -39,17 +39,27 @@ class Event(NamedTuple):
 
     @staticmethod
     def attr_validators() -> dict:
-        from seanb.ttally_types import edit_in_vim
+        from my.config.seanb.ttally_types import edit_in_vim  # type: ignore
 
         return {"comments": edit_in_vim}
 
 
-from seanb.ttally_self import SelfTypes
+import os
+from enum import Enum
+
+
+SelfTypes = Enum(
+    "SelfTypes",
+    [
+        s.rstrip().upper()
+        for s in open(os.path.join(os.environ["HPIDATA"], "self_types.txt"))
+    ],
+)
 
 
 class Self(NamedTuple):
     when: datetime
-    what: SelfTypes
+    what: SelfTypes  # type: ignore
 ```
 
 to (shell aliases)...

@@ -10,6 +10,7 @@ import inspect
 from functools import lru_cache
 from pathlib import Path
 from typing import (
+    Union,
     Set,
     Callable,
     TYPE_CHECKING,
@@ -33,29 +34,47 @@ if TYPE_CHECKING:
     from click import Group
 
 
-class Accessor:
+def expand_path(pathish: Union[str, Path]) -> Path:
+    if isinstance(pathish, Path):
+        return pathish.expanduser().absolute()
+    else:
+        return Path(pathish).expanduser().absolute()
+
+
+class Extension:
     def __init__(
         self,
         *,
-        name: str,
-        module_name: str,
-        config_file: str,
-        data_dir: Optional[str] = None,
-        data_dir_environment_variable: str = "TTALLY_DATA_DIR",
+        # python module info
+        name: str = "ttally",
+        config_module_name: str = "ttally.config",
+        # data dir
+        data_dir_envvar: str = "TTALLY_DATA_DIR",
         data_dir_default: str = "~/.local/share/ttally",
+        # config file
+        config_envvar: str = "TTALLY_CFG",
+        config_default: str = "~/.config/ttally.py",
+        # cache/temp dir
+        cache_dir_envvar: str = "TTALLY_CACHE_DIR",
+        # extensions
+        datafile_extension_envvar: str = "TTALLY_EXT",
+        default_extension: "Format" = "json",
         merged_extesion: "Format" = "json",
-        extension: Optional["Format"] = None,
+        # help info
+        URL: str = "https://github.com/seanbreckenridge/ttally",
     ) -> None:
 
         # config
         self.name = name
-        self.module_name = module_name
-        self.config_file = config_file
-        self.extension: Optional["Format"] = extension
+        self.config_module_name = config_module_name
+        self.URL = URL
+
+        self.config_file = self.compute_config_file(config_envvar, config_default)
 
         # extensions
-        if extension is None and "TTALLY_EXT" in os.environ:
-            self.extension = cast("Format", os.environ["TTALLY_EXT"])
+        self.extension: Optional["Format"] = cast(
+            "Format", os.environ.get(datafile_extension_envvar, default_extension)
+        )
         self.merged_extension = merged_extesion
 
         # load config
@@ -65,13 +84,9 @@ class Accessor:
         ), f"{self.config_module} failed to import from {self.config_file}"
 
         # compute data/cache directories
-        if data_dir is None:
-            self.data_dir: Path = self.compute_data_dir(
-                data_dir_environment_variable, data_dir_default
-            )
-        else:
-            self.data_dir = Path(data_dir)
-        self.cache_dir = self.compute_cache_dir()
+        self.data_dir: Path = self.compute_data_dir(data_dir_envvar, data_dir_default)
+        self.cache_dir = self.compute_cache_dir(cache_dir_envvar)
+
         self.hash_file = str(self.cache_dir / "ttally_hash.pickle")
 
         self.MODELS: Dict[str, Type[NamedTuple]] = {
@@ -82,12 +97,20 @@ class Accessor:
         }
 
     # CONFIG
+    def compute_config_file(self, envvar: str, default: str) -> Path:
+        cfg_file: str = os.environ.get(envvar, default)
+        cfg_path = expand_path(cfg_file)
+        if not cfg_path.exists():
+            raise FileNotFoundError(
+                f"Expected configuration to exist at {cfg_path}, see {self.URL} for an example"
+            )
+        return cfg_path
 
     def import_config(self) -> Any:
-        from ttally import _load_config_module
+        from ttally import load_config_module
 
-        return _load_config_module(
-            self.config_file, self.module_name, self.check_import
+        return load_config_module(
+            str(self.config_file), self.config_module_name, self.check_import, self.URL
         )
 
     def check_import(self) -> None:
@@ -165,20 +188,23 @@ class Accessor:
     @classmethod
     @lru_cache(maxsize=1)
     def versioned_timestamp(cls) -> str:
-        import socket
 
-        OS = sys.platform.casefold()
-        # for why this uses socket:
-        # https://docs.python.org/3/library/os.html#os.uname
-        HOSTNAME = "".join(socket.gethostname().split()).casefold()
-        TIMESTAMP = datetime.strftime(datetime.now(), "%Y-%m")
-        return f"{OS}-{HOSTNAME}-{TIMESTAMP}"
+        timestamp = datetime.strftime(datetime.now(), "%Y-%m")
+        # I set a ON_OS variable using on_machine:
+        # https://github.com/seanbreckenridge/on_machine
+        if "ON_OS" in os.environ:
+            computer = os.environ["ON_OS"]
+        else:
+            import socket
 
-    def compute_data_dir(
-        self, environment_variable: str, data_dir_default: str
-    ) -> Path:
-        ddir: str = os.environ.get(environment_variable, data_dir_default)
-        p = Path(ddir).expanduser().absolute()
+            # for why this uses socket:
+            # https://docs.python.org/3/library/os.html#os.uname
+            computer = f"{sys.platform.casefold()}-{''.join(socket.gethostname().split()).casefold()}"
+        return f"{computer}-{timestamp}"
+
+    def compute_data_dir(self, envvar: str, default: str) -> Path:
+        ddir: str = os.environ.get(envvar, default)
+        p = expand_path(ddir)
         if not p.exists():
             import warnings
 
@@ -195,8 +221,10 @@ class Accessor:
         # conflicts across computers while using syncthing
         # this also decreases the amount of items that have
         # to be loaded into memory for load_prompt_and_writeback
-        ext = os.environ.get("TTALLY_EXT", "yaml")
-        return self.data_dir / f"{for_function}-{self.versioned_timestamp()}.{ext}"
+        return (
+            self.data_dir
+            / f"{for_function}-{self.versioned_timestamp()}.{self.extension}"
+        )
 
     # globs all datafiles for some for_function
     def glob_datafiles(self, for_function: str) -> Iterator[Path]:
@@ -204,7 +232,7 @@ class Accessor:
             if f.startswith(for_function):
                 yield self.data_dir / f
 
-    def ttally_temp_dir(self) -> Path:
+    def temp_dir(self) -> Path:
         from tempfile import gettempdir
 
         tdir = gettempdir()
@@ -314,13 +342,13 @@ class Accessor:
             print(datetime.fromtimestamp(getattr(o, dt_attr).timestamp()), end="\t")
             print(" \t".join([str(getattr(o, a)) for a in other_attrs]))
 
-    def compute_cache_dir(self) -> Path:
+    def compute_cache_dir(self, envvar: str) -> Path:
         base_cache_dir = Path(
             os.environ.get("XDG_CACHE_DIR", str(Path.home() / ".cache"))
         )
 
-        ttally_cache_dir = Path(
-            os.environ.get("TTALLY_CACHE_DIR", base_cache_dir / "ttally")
+        ttally_cache_dir = expand_path(
+            Path(os.environ.get(envvar, base_cache_dir / "ttally"))
         )
         if not ttally_cache_dir.exists():
             ttally_cache_dir.mkdir(parents=True)
@@ -468,10 +496,10 @@ class Accessor:
             )
             sys.exit(1)
 
-    def cli_wrap(self, call: bool = True, *args: Any, **kwargs: Any) -> "Group":
+    def wrap_cli(self, call: bool = True, *args: Any, **kwargs: Any) -> "Group":
         from ttally.main import wrap_accessor
 
-        grp = wrap_accessor(accessor=self)
+        grp = wrap_accessor(extension=self)
         if call:
             grp(*args, **kwargs)
 

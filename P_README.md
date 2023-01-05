@@ -94,11 +94,11 @@ Food(when=datetime.datetime(2020, 9, 27, 6, 53, 44, tzinfo=datetime.timezone.utc
 
 The `from-json` command can be used to send this JSON which matches a model, i.e. providing a non-interactive interface to add items, in case I want to [call this from a script](bin/cz)
 
-`hpi query` from [`HPI`](https://github.com/seanbreckenridge/HPI) can be used with the `ttally.funcs` module, like:
+`hpi query` from [`HPI`](https://github.com/seanbreckenridge/HPI) can be used with the `ttally.__main__` module, like:
 
 ```bash
 # how many calories in the last day
-$ hpi query ttally.funcs.food --recent 1d -s | jq -r '(.quantity)*(.calories)' | datamash sum 1
+$ hpi query ttally.__main__.food --recent 1d -s | jq -r '(.quantity)*(.calories)' | datamash sum 1
 2252
 ```
 

@@ -1,17 +1,19 @@
 # hook to load information from tally configuration
 
 import sys
+import os
 import importlib.util
-from typing import Callable, Set, Any
-
-from .default_config import ttally_config_path, URL
+from typing import Callable, Set, Any, Optional
 
 
 LOADED: Set[str] = set()
 
 
-def _load_config_module(
-    file: str, module_name: str, test_import_func: Callable[[], None]
+def load_config_module(
+    file: str,
+    module_name: str,
+    test_import_func: Callable[[], None],
+    URL: Optional[str] = None,
 ) -> Any:
     if module_name in LOADED:
         return sys.modules[module_name]
@@ -37,16 +39,19 @@ def _load_config_module(
         return mod
     except ImportError as e:
         raise ImportError(
-            f"""Importing '{module_name}' from '{file}' failed! (error: {e}).
-See {URL} for more information"""
+            f"""Importing '{module_name}' from '{file}' failed! (error: {e}).""" + ""
+            if URL is None
+            else f"""\nSee {URL} for more information"""
         )
 
 
+# when 'ttally' module is imported, run default ttally.config
 def setup_ttally_config() -> None:
-    def _test_import() -> None:
-        import ttally.config  # noqa
+    # if user doesnt want this to happen, set this envvar
+    if "TTALLY_SKIP_DEFAULT_IMPORT" not in os.environ:
+        from .core import Extension
 
-    _load_config_module(ttally_config_path, "ttally.config", _test_import)
+        Extension().import_config()
 
 
 setup_ttally_config()
