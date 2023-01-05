@@ -44,7 +44,7 @@ See {URL} for more information"""
 
 def setup_ttally_config() -> None:
     def _test_import() -> None:
-        import ttally.config
+        import ttally.config  # noqa
 
     _load_config_module(ttally_config_path, "ttally.config", _test_import)
 

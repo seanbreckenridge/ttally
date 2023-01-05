@@ -12,7 +12,6 @@ from pathlib import Path
 from typing import (
     Set,
     Callable,
-    Optional,
     TYPE_CHECKING,
     Iterator,
     cast,
@@ -43,7 +42,7 @@ class Accessor:
         config_file: str,
         data_dir: Optional[str] = None,
         data_dir_environment_variable: str = "TTALLY_DATA_DIR",
-        data_dir_default="~/.local/share/ttally",
+        data_dir_default: str= "~/.local/share/ttally",
         merged_extesion: "Format" = "json",
         extension: Optional["Format"] = None,
     ) -> None:
@@ -92,7 +91,7 @@ class Accessor:
         )
 
     def check_import(self) -> None:
-        import ttally.config  # type: ignore[import]
+        import ttally.config  # noqa
 
     @staticmethod
     def _is_model(o: Any) -> bool:
@@ -469,7 +468,7 @@ class Accessor:
             )
             sys.exit(1)
 
-    def cli_wrap(self, call: bool = True, *args, **kwargs) -> "Group":
+    def cli_wrap(self, call: bool = True, *args: Any, **kwargs: Any) -> "Group":
         from ttally.main import wrap_accessor
 
         grp = wrap_accessor(accessor=self)
