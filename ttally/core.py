@@ -49,12 +49,15 @@ class Extension:
         name: str = "ttally",
         config_module_name: str = "ttally.config",
         # data dir
+        data_dir: Optional[str] = None,
         data_dir_envvar: str = "TTALLY_DATA_DIR",
         data_dir_default: str = "~/.local/share/ttally",
         # config file
+        config_file: Optional[str] = None,
         config_envvar: str = "TTALLY_CFG",
         config_default: str = "~/.config/ttally.py",
         # cache/temp dir
+        cache_dir: Optional[str] = None,
         cache_dir_envvar: str = "TTALLY_CACHE_DIR",
         # extensions
         datafile_extension_envvar: str = "TTALLY_EXT",
@@ -69,7 +72,11 @@ class Extension:
         self.config_module_name = config_module_name
         self.URL = URL
 
-        self.config_file = self.compute_config_file(config_envvar, config_default)
+        self.config_file = (
+            expand_path(config_file)
+            if config_file is not None
+            else self.compute_config_file(config_envvar, config_default)
+        )
 
         # extensions
         self.extension: Optional["Format"] = cast(
@@ -84,8 +91,16 @@ class Extension:
         ), f"{self.config_module} failed to import from {self.config_file}"
 
         # compute data/cache directories
-        self.data_dir: Path = self.compute_data_dir(data_dir_envvar, data_dir_default)
-        self.cache_dir = self.compute_cache_dir(cache_dir_envvar)
+        self.data_dir: Path = (
+            expand_path(data_dir)
+            if data_dir is not None
+            else self.compute_data_dir(data_dir_envvar, data_dir_default)
+        )
+        self.cache_dir = (
+            expand_path(cache_dir)
+            if cache_dir is not None
+            else self.compute_cache_dir(cache_dir_envvar)
+        )
 
         self.hash_file = str(self.cache_dir / "ttally_hash.pickle")
 
@@ -127,10 +142,15 @@ class Extension:
         assert hasattr(nt, "_fields"), "Did not receive a valid NamedTuple!"
         return str(nt.__name__.casefold())
 
+    def _mk_datadir(self) -> None:
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+
     # load, prompt and writeback one of the models
     def prompt(self, nt: Type[NamedTuple]) -> None:
 
         from autotui.shortcuts import load_prompt_and_writeback
+
+        self._mk_datadir()
 
         f: Path = self.datafile(self.namedtuple_func_name(nt))
         load_prompt_and_writeback(nt, f)
@@ -138,6 +158,8 @@ class Extension:
     # prompt, but set the datetime for the resulting nametuple to now
     def prompt_now(self, nt: Type[NamedTuple]) -> None:
         from autotui.shortcuts import load_prompt_and_writeback
+
+        self._mk_datadir()
 
         # load items from file
         p: Path = self.datafile(self.namedtuple_func_name(nt))
@@ -148,6 +170,8 @@ class Extension:
 
         from autotui.shortcuts import load_from
         from itertools import chain
+
+        self._mk_datadir()
 
         yield from chain(
             *map(
@@ -391,6 +415,8 @@ class Extension:
         cache_stale = False
         if models is None:
             models = self.MODELS
+
+        self.cache_dir.mkdir(parents=True, exist_ok=True)
 
         with shelve.open(self.hash_file) as db:
             fh = hashes or self.file_hashes(for_models=for_models, models=models)
