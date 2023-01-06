@@ -175,6 +175,10 @@ I personally run it [once every 3 minutes](https://sean.fish/d/ttally_cache.job?
 
 Default cache directory can be overwritten with the `TTALLY_CACHE_DIR` environment variable
 
+### Subclassing/Extension
+
+The entire `ttally` library/CLI can also be subclassed/extended for custom usage, by using `ttally.core.Extension` class and `wrap_cli` to add additional [click](https://click.palletsprojects.com/en/8.1.x) commands. For an example, see [flipflop.py](https://sean.fish/d/flipflop.py?redirect)
+
 ### Shell Scripts
 
 [`cz`](bin/cz) lets me fuzzy select something I've eaten in the past using [`fzf`](https://github.com/junegunn/fzf), like:
