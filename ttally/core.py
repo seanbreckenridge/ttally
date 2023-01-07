@@ -61,7 +61,7 @@ class Extension:
         cache_dir_envvar: str = "TTALLY_CACHE_DIR",
         # extensions
         datafile_extension_envvar: str = "TTALLY_EXT",
-        default_extension: "Format" = "json",
+        default_extension: "Format" = "yaml",
         merged_extesion: "Format" = "json",
         # help info
         URL: str = "https://github.com/seanbreckenridge/ttally",
