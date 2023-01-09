@@ -9,8 +9,7 @@ from typing import Any, Optional
 import click
 from autotui.fileio import namedtuple_sequence_dumps
 from autotui.pick import pick_namedtuple
-from ttally.autotui_ext import glob_namedtuple
-from ttally.file import ttally_merged_path
+from ttally.__main__ import ext
 from ttally.config import Food  # type: ignore
 
 
@@ -29,7 +28,7 @@ def main(scale: bool):
     subprocess.run(shlex.split("ttally merge food --sort-key when"), check=True)
 
     # pick
-    food: list[Food] = list(glob_namedtuple(Food))
+    food: list[Food] = list(ext.glob_namedtuple(Food))
     picked: Optional[Food] = pick_namedtuple(food)
     if picked is None:
         click.echo("No food picked", err=True)
@@ -44,6 +43,7 @@ def main(scale: bool):
     # update and fix quantity based on new calories ratio
     data = json.loads(namedtuple_sequence_dumps(food))
     edited_list: list[dict[str, Any]] = []
+    assert isinstance(picked, Food)
     for blob in data:
         if blob["food"] == picked.food:
             assert "calories" in blob and "water" in blob and "quantity" in blob
@@ -59,7 +59,7 @@ def main(scale: bool):
         edited_list.append(blob)
 
     # write back to merged file
-    ttally_merged_path("food").write_text(json.dumps(edited_list))
+    ext.ttally_merged_path("food").write_text(json.dumps(edited_list))
 
 
 if __name__ == "__main__":
