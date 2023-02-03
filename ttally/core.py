@@ -66,7 +66,6 @@ class Extension:
         # help info
         URL: str = "https://github.com/seanbreckenridge/ttally",
     ) -> None:
-
         # config
         self.name = name
         self.config_module_name = config_module_name
@@ -147,7 +146,6 @@ class Extension:
 
     # load, prompt and writeback one of the models
     def prompt(self, nt: Type[NamedTuple]) -> None:
-
         from autotui.shortcuts import load_prompt_and_writeback
 
         self._mk_datadir()
@@ -167,7 +165,6 @@ class Extension:
 
     # takes one of the models.py and loads all data from it
     def glob_namedtuple(self, nt: Type[NamedTuple]) -> Iterator[NamedTuple]:
-
         from autotui.shortcuts import load_from
         from itertools import chain
 
@@ -212,7 +209,6 @@ class Extension:
     @classmethod
     @lru_cache(maxsize=1)
     def versioned_timestamp(cls) -> str:
-
         timestamp = datetime.strftime(datetime.now(), "%Y-%m")
         # I set a ON_OS variable using on_machine:
         # https://github.com/seanbreckenridge/on_machine
@@ -411,7 +407,6 @@ class Extension:
         for_models: Optional[Set[str]] = None,
         models: Optional[Dict[str, Type[NamedTuple]]] = None,
     ) -> bool:
-
         cache_stale = False
         if models is None:
             models = self.MODELS
@@ -444,7 +439,6 @@ class Extension:
         *,
         models: Optional[Dict[str, Type[NamedTuple]]] = None,
     ) -> bool:
-
         if models is None:
             models = self.MODELS
 
