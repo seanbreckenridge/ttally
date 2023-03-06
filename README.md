@@ -118,7 +118,7 @@ $ water-recent 5
 
 This intentionally uses YAML and doesn't store the info into a single "merged" database. That way:
 
-- you can just open the YAML file and quickly change/edit some item, no need to re-invent a CRUD interface
+- you can just open the YAML file and quickly change/edit some item, no need to re-invent a CRUD interface (though `ttally edit-recent` does exist)
 - files can be synced across machines and to my phone using [syncthing](https://syncthing.net/) without file conflicts
 - prevents issues with trying to merge multiple databases from different machines together ([I've tried](https://github.com/seanbreckenridge/calories-scripts/blob/master/calmerge))
 
@@ -189,6 +189,7 @@ Options:
 Commands:
   datafile      print the datafile location
   edit          edit the datafile
+  edit-recent   fuzzy select/edit recent items
   export        export all data from a model
   from-json     add item by piping JSON
   generate      generate shell aliases

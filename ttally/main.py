@@ -280,4 +280,55 @@ def wrap_accessor(*, extension: Extension) -> click.Group:
 
         click.edit(filename=str(f))
 
+    @call_main.command(short_help="fuzzy select/edit recent items")
+    @click.option(
+        "-l",
+        "--loop",
+        is_flag=True,
+        default=False,
+        help="prompt fields to edit multple times",
+    )
+    @model_with_completion
+    def edit_recent(loop: bool, model: str) -> None:
+        """
+        Edit recent items from a model, fuzzy selecting and then selecting fields to edit
+        """
+        nt = extension._model_from_string(model)
+        f = extension.datafile(model)
+        if not f.exists():
+            click.secho(f"Error: {f} doesn't exist. ", err=True, fg="red")
+            return
+
+        from autotui.shortcuts import load_from
+
+        data = list(load_from(to=nt, path=f))
+        if len(data) == 0:
+            click.secho(f"Error: No data for {model}", err=True, fg="red")
+            return
+
+        from autotui.pick import pick_namedtuple
+        from autotui.edit import edit_namedtuple
+        from autotui.shortcuts import dump_to
+
+        key = lambda d: ", ".join([f"{k}: {v}" for k, v in d._asdict().items()])
+
+        # pick data from current file
+        selected = pick_namedtuple(
+            data,
+            fzf_options=("--reverse",),
+            key_func=key,
+        )
+        if selected is None:
+            return
+
+        # choose a field to edit and writeback
+        idx = data.index(selected)
+        print(f"Editing item: {key(selected)}", file=sys.stderr)
+        edited = edit_namedtuple(selected, loop=loop, print_namedtuple=True)
+        data[idx] = edited
+
+        click.echo(f"Edited at index {idx}:\nFrom:\t{key(selected)}\nTo:\t{key(edited)}", err=True)
+
+        dump_to(data, f)
+
     return call_main
