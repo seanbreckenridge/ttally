@@ -328,7 +328,10 @@ def wrap_accessor(*, extension: Extension) -> click.Group:
         edited = edit_namedtuple(selected, loop=loop, print_namedtuple=True)
         data[idx] = edited
 
-        click.echo(f"Edited at index {idx}:\nFrom:\t{_nt_string(selected)}\nTo:\t{_nt_string(edited)}", err=True)
+        click.echo(
+            f"Edited at index {idx}:\nFrom:\t{_nt_string(selected)}\nTo:\t{_nt_string(edited)}",
+            err=True,
+        )
 
         dump_to(data, f)
 

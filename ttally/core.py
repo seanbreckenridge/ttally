@@ -110,7 +110,12 @@ class Extension:
             )
         }
 
-    # CONFIG
+    ############
+    #          #
+    #  CONFIG  #
+    #          #
+    ############
+
     def compute_config_file(self, envvar: str, default: str) -> Path:
         cfg_file: str = os.environ.get(envvar, default)
         cfg_path = expand_path(cfg_file)
@@ -134,7 +139,11 @@ class Extension:
     def _is_model(o: Any) -> bool:
         return inspect.isclass(o) and issubclass(o, tuple) and hasattr(o, "_fields")
 
-    # AUTOTUI_EXT
+    #################
+    #               #
+    #  AUTOTUI_EXT  #
+    #               #
+    #################
 
     @staticmethod
     def namedtuple_func_name(nt: Type[NamedTuple]) -> str:
@@ -204,7 +213,11 @@ class Extension:
         items.extend(new_items)
         dump_to(items, p)
 
-    # FILE/IO
+    #############
+    #           #
+    #  FILE/IO  #
+    #           #
+    #############
 
     @classmethod
     @lru_cache(maxsize=1)
@@ -261,8 +274,13 @@ class Extension:
             ttally_temp_dir.mkdir(parents=True)
         return ttally_temp_dir
 
-    # FUNCS
+    ###########
+    #         #
+    #  FUNCS  #
+    #         #
+    ###########
 
+    # used with 'hpi query'
     def funccreator(self) -> Callable[[str], Callable[[], Iterator[NamedTuple]]]:
         def model_iterator(name: str) -> Callable[[], Iterator[NamedTuple]]:
             if name in self.MODELS:
@@ -271,7 +289,11 @@ class Extension:
 
         return model_iterator
 
-    # CODEGEN
+    #############
+    #           #
+    #  CODEGEN  #
+    #           #
+    #############
 
     def generate_shell_aliases(self, python_loc: str = "python3") -> Iterator[str]:
         pre = f"'{python_loc} -m ttally "
@@ -281,7 +303,12 @@ class Extension:
             yield f"alias {mname}-now={pre}prompt-now {mname}{suf}"
             yield f"alias {mname}-recent={pre}recent {mname}{suf}"
 
-    # RECENT
+    ############
+    #          #
+    #  RECENT  #
+    #          #
+    ############
+
     @classmethod
     def namedtuple_extract_from_annotation(
         cls, nt: Type[NamedTuple], _type: Any
@@ -361,6 +388,12 @@ class Extension:
         for o in res:
             print(datetime.fromtimestamp(getattr(o, dt_attr).timestamp()), end="\t")
             print(" \t".join([str(getattr(o, a)) for a in other_attrs]))
+
+    ###########
+    #         #
+    #  CACHE  #
+    #         #
+    ###########
 
     def compute_cache_dir(self, envvar: str) -> Path:
         base_cache_dir = Path(
@@ -499,7 +532,12 @@ class Extension:
         )
         return data
 
-    # CLI helpers
+    #################
+    #               #
+    #  CLI helpers  #
+    #               #
+    #################
+
     def _autocomplete_model_names(self) -> List[str]:
         # sort this, so that the order doesn't change while tabbing through
         return sorted(m for m in self.MODELS)
