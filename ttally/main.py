@@ -316,7 +316,7 @@ def wrap_accessor(*, extension: Extension) -> click.Group:
         # pick data from current file
         selected = pick_namedtuple(
             data,
-            fzf_options=("--reverse",),
+            fzf_options=("--tac",),
             key_func=_nt_string,
         )
         if selected is None:
