@@ -310,24 +310,25 @@ def wrap_accessor(*, extension: Extension) -> click.Group:
         from autotui.edit import edit_namedtuple
         from autotui.shortcuts import dump_to
 
-        key = lambda d: ", ".join([f"{k}: {v}" for k, v in d._asdict().items()])
+        def _nt_string(d: NamedTuple) -> str:
+            return ", ".join([f"{k}: {v}" for k, v in d._asdict().items()])
 
         # pick data from current file
         selected = pick_namedtuple(
             data,
             fzf_options=("--reverse",),
-            key_func=key,
+            key_func=_nt_string,
         )
         if selected is None:
             return
 
         # choose a field to edit and writeback
         idx = data.index(selected)
-        print(f"Editing item: {key(selected)}", file=sys.stderr)
+        print(f"Editing item: {_nt_string(selected)}", file=sys.stderr)
         edited = edit_namedtuple(selected, loop=loop, print_namedtuple=True)
         data[idx] = edited
 
-        click.echo(f"Edited at index {idx}:\nFrom:\t{key(selected)}\nTo:\t{key(edited)}", err=True)
+        click.echo(f"Edited at index {idx}:\nFrom:\t{_nt_string(selected)}\nTo:\t{_nt_string(edited)}", err=True)
 
         dump_to(data, f)
 
