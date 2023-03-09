@@ -349,9 +349,9 @@ class Extension:
         )
 
     def query_recent(self, nt: Type[NamedTuple], count: int) -> List[NamedTuple]:
+        """query the module for recent entries (based on datetime) from a namedtuple"""
         import more_itertools
 
-        """query the module for recent entries (based on datetime) from a namedtuple"""
         items: List[NamedTuple] = more_itertools.take(
             count, self.glob_namedtuple_by_datetime(nt, reverse=True)
         )
