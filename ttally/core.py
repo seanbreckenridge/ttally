@@ -62,7 +62,7 @@ class Extension:
         # extensions
         datafile_extension_envvar: str = "TTALLY_EXT",
         default_extension: "Format" = "yaml",
-        merged_extesion: "Format" = "json",
+        merged_extension: "Format" = "json",
         # help info
         URL: str = "https://github.com/seanbreckenridge/ttally",
     ) -> None:
@@ -81,7 +81,7 @@ class Extension:
         self.extension: Optional["Format"] = cast(
             "Format", os.environ.get(datafile_extension_envvar, default_extension)
         )
-        self.merged_extension = merged_extesion
+        self.merged_extension = merged_extension
 
         # load config
         self.config_module = self.import_config()

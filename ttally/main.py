@@ -197,7 +197,14 @@ def wrap_accessor(*, extension: Extension) -> click.Group:
     @click.option(
         "--sort-key", default=None, help="Sort resulting merged data by JSON key"
     )
-    def merge(model: str, sort_key: Optional[str]) -> None:
+    @click.option(
+        "-R",
+        "--remove-duplicates",
+        default=False,
+        is_flag=True,
+        help="Remove duplicate entries from the merged data (might occur if there are errors syncing files)",
+    )
+    def merge(model: str, sort_key: Optional[str], remove_duplicates: bool) -> None:
         """
         Merge all datafiles for one model into a single '-merged.json' file
         """
@@ -205,6 +212,7 @@ def wrap_accessor(*, extension: Extension) -> click.Group:
         from datetime import datetime
 
         from autotui.fileio import namedtuple_sequence_dumps
+        from more_itertools import unique_everseen
 
         datafiles: List[Path] = list(extension.glob_datafiles(model))
         if len(datafiles) == 0:
@@ -217,17 +225,26 @@ def wrap_accessor(*, extension: Extension) -> click.Group:
             )
         )
 
-        # if provided, use sort key
-        if sort_key is not None and len(data) > 0:
-            assert sort_key in data[0], f"Could not find {sort_key} in {data[0]}"
-            data = list(sorted(data, key=lambda obj: obj[sort_key]))  # type: ignore[no-any-return]
-
+        # write backup before sorting/removing datafiles
         epoch = int(datetime.now().timestamp())
         cachefile = extension.temp_dir() / f"{model}-{epoch}-merged.json"
 
         click.echo(f"Writing backup to '{cachefile}'", err=True)
         with cachefile.open("w") as backup_f:
             json.dump(data, backup_f)
+
+        # if provided, use sort key
+        if sort_key is not None and len(data) > 0:
+            assert sort_key in data[0], f"Could not find {sort_key} in {data[0]}"
+            data = list(sorted(data, key=lambda obj: obj[sort_key]))  # type: ignore[no-any-return]
+
+        if remove_duplicates:
+            new_data = list(unique_everseen(data, key=lambda obj: json.dumps(obj)))
+            if len(new_data) != len(data):
+                click.echo(f"Removed {len(data) - len(new_data)} duplicates", err=True)
+            else:
+                click.echo("No duplicates found", err=True)
+            data = new_data
 
         # remove current datafiles
         for rmf in datafiles:
