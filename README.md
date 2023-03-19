@@ -133,12 +133,10 @@ food-linux-localhost-2021-04.yaml
 ... which can then be combined back into python, like:
 
 ```python
-from more_itertools import take  # just to grab a few items
-
-from ttally.autotui_ext import glob_namedtuple
-from ttally.config import Food
-
-> take(3, glob_namedtuple(Food))
+>>> from more_itertools import take  # just to grab a few items
+>>> from ttally.__main__ import ext
+>>> from ttally.config import Food
+>>> take(3, ext.glob_namedtuple(Food))
 
 [Food(when=datetime.datetime(2020, 9, 27, 6, 49, 34, tzinfo=datetime.timezone.utc), calories=440, food='ramen, egg'),
 Food(when=datetime.datetime(2020, 9, 27, 6, 52, 16, tzinfo=datetime.timezone.utc), calories=160, food='2 eggs'),
