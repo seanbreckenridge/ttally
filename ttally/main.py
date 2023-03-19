@@ -1,6 +1,6 @@
 import sys
 import json
-from typing import NamedTuple, Optional, List, Sequence, Iterable, Any
+from typing import NamedTuple, Optional, List, Sequence, Iterable, Any, Literal, Union
 
 import click
 
@@ -112,6 +112,16 @@ def wrap_accessor(*, extension: Extension) -> click.Group:
         """
         extension.prompt_now(extension._model_from_string(model))
 
+    def _parse_recent(value: Union[str, int]) -> Union[int, Literal["all"]]:
+        if isinstance(value, int):
+            return value
+        if value.lower() == "all":
+            return "all"
+        try:
+            return int(value)
+        except ValueError:
+            raise click.BadParameter(f"{value} is not 'all' or a valid integer")
+
     @call_main.command(name="recent", short_help="print recently tallied items")
     @model_with_completion
     @click.option(
@@ -121,24 +131,24 @@ def wrap_accessor(*, extension: Extension) -> click.Group:
         default="",
         help="comma separated list of attributes to remove while printing",
     )
-    @click.argument("COUNT", type=int, default=10)
-    def _recent(model: str, remove_attrs: str, count: int) -> None:
+    @click.argument("COUNT", default=10, type=click.UNPROCESSED, callback=lambda ctx, arg, value: _parse_recent(value))
+    def _recent(model: str, remove_attrs: str, count: Union[int, Literal["all"]]) -> None:
         """
         List recent items logged for this model
+
+        Can provide 'all' for COUNT to list all items
         """
         from more_itertools import take, always_reversible
 
+        # try to load cached data
         res: Optional[List[NamedTuple]] = None
         try:
             # reverse so it is ordered for query properly
             from autotui.serialize import deserialize_namedtuple
 
-            res = [
-                deserialize_namedtuple(o, to=extension.MODELS[model])
-                for o in take(
-                    count, always_reversible(extension.read_cache_json(model=model))
-                )
-            ]
+            res_iter = always_reversible(extension.read_cache_json(model=model))
+            res_items = take(count, res_iter) if count != "all" else list(res_iter)
+            res = [deserialize_namedtuple(o, to=extension.MODELS[model]) for o in res_items]
         except RuntimeError:
             pass
 

@@ -10,6 +10,7 @@ import inspect
 from functools import lru_cache
 from pathlib import Path
 from typing import (
+    Literal,
     Union,
     Set,
     Callable,
@@ -348,19 +349,22 @@ class Extension:
             reverse=reverse,
         )
 
-    def query_recent(self, nt: Type[NamedTuple], count: int) -> List[NamedTuple]:
+    def query_recent(self, nt: Type[NamedTuple], count: Union[int, Literal["all"]]) -> List[NamedTuple]:
         """query the module for recent entries (based on datetime) from a namedtuple"""
         import more_itertools
 
-        items: List[NamedTuple] = more_itertools.take(
-            count, self.glob_namedtuple_by_datetime(nt, reverse=True)
-        )
+        items_itr = self.glob_namedtuple_by_datetime(nt, reverse=True)
+        items: List[NamedTuple]
+        if count == "all":
+            items = list(items_itr)
+        else:
+            items = more_itertools.take(count, items_itr)
         return items
 
     def query_print(
         self,
         nt: Type[NamedTuple],
-        count: int,
+        count: Union[int, Literal["all"]],
         remove_attrs: List[str],
         cached_data: Optional[List[NamedTuple]] = None,
     ) -> None:
@@ -371,6 +375,8 @@ class Extension:
         if cached_data is None:
             res = more_itertools.peekable(iter(self.query_recent(nt, count)))
         else:
+            if count == "all":
+                count = len(cached_data)
             res = more_itertools.peekable(more_itertools.take(count, cached_data))
         try:
             first_item: NamedTuple = res.peek()  # namedtuple-like
