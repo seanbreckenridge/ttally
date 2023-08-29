@@ -7,7 +7,6 @@ import os
 import json
 import shelve
 import inspect
-from functools import lru_cache
 from pathlib import Path
 from typing import (
     Literal,
@@ -221,7 +220,6 @@ class Extension:
     #############
 
     @classmethod
-    @lru_cache(maxsize=1)
     def versioned_timestamp(cls) -> str:
         timestamp = datetime.strftime(datetime.now(), "%Y-%m")
         # I set a ON_OS variable using on_machine:
