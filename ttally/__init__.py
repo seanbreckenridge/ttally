@@ -47,7 +47,7 @@ def load_config_module(
 
 # when 'ttally' module is imported, run default ttally.config
 def setup_ttally_config() -> None:
-    # if user doesnt want this to happen, set this envvar
+    # if user doesn't want this to happen, set this envvar
     if "TTALLY_SKIP_DEFAULT_IMPORT" not in os.environ:
         from .core import Extension
 
