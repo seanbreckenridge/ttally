@@ -47,7 +47,7 @@ def wrap_accessor(*, extension: Extension) -> click.Group:
         "--partial",
         default=False,
         is_flag=True,
-        help="Allow partial input -- prompt any fields which arent provided",
+        help="Allow partial input -- prompt any fields which aren't provided",
     )
     @click.option(
         "-f",
@@ -174,7 +174,7 @@ def wrap_accessor(*, extension: Extension) -> click.Group:
         List all the data from a model as JSON
         """
 
-        # read from cache if cache isnt stale
+        # read from cache if cache isn't stale
         itr: Optional[Iterable[Any]] = None
         try:
             itr = extension.read_cache_json(model=model)
@@ -313,7 +313,7 @@ def wrap_accessor(*, extension: Extension) -> click.Group:
         "--loop",
         is_flag=True,
         default=False,
-        help="prompt fields to edit multple times",
+        help="prompt fields to edit multiple times",
     )
     @model_with_completion
     def edit_recent(loop: bool, model: str) -> None:
