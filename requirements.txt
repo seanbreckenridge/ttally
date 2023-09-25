@@ -1,3 +1,0 @@
-click>=8.0
-autotui>=0.4.6
-more_itertools>=8.0

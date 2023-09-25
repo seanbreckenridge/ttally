@@ -131,8 +131,15 @@ def wrap_accessor(*, extension: Extension) -> click.Group:
         default="",
         help="comma separated list of attributes to remove while printing",
     )
-    @click.argument("COUNT", default=10, type=click.UNPROCESSED, callback=lambda ctx, arg, value: _parse_recent(value))
-    def _recent(model: str, remove_attrs: str, count: Union[int, Literal["all"]]) -> None:
+    @click.argument(
+        "COUNT",
+        default=10,
+        type=click.UNPROCESSED,
+        callback=lambda ctx, arg, value: _parse_recent(value),
+    )
+    def _recent(
+        model: str, remove_attrs: str, count: Union[int, Literal["all"]]
+    ) -> None:
         """
         List recent items logged for this model
 
@@ -148,7 +155,9 @@ def wrap_accessor(*, extension: Extension) -> click.Group:
 
             res_iter = always_reversible(extension.read_cache_json(model=model))
             res_items = take(count, res_iter) if count != "all" else list(res_iter)
-            res = [deserialize_namedtuple(o, to=extension.MODELS[model]) for o in res_items]
+            res = [
+                deserialize_namedtuple(o, to=extension.MODELS[model]) for o in res_items
+            ]
         except RuntimeError:
             pass
 

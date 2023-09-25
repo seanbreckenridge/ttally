@@ -347,7 +347,9 @@ class Extension:
             reverse=reverse,
         )
 
-    def query_recent(self, nt: Type[NamedTuple], count: Union[int, Literal["all"]]) -> List[NamedTuple]:
+    def query_recent(
+        self, nt: Type[NamedTuple], count: Union[int, Literal["all"]]
+    ) -> List[NamedTuple]:
         """query the module for recent entries (based on datetime) from a namedtuple"""
         import more_itertools
 
