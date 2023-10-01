@@ -79,15 +79,24 @@ def wrap_accessor(*, extension: Extension) -> click.Group:
 
     @call_main.command(short_help="print the datafile location")
     @model_with_completion
-    def datafile(model: str) -> None:
+    @click.argument(
+        "PATH_TYPE",
+        type=click.Choice(["datafile", "merged", "cached"]),
+        default="datafile",
+    )
+    def datafile(
+        model: str, path_type: Literal["datafile", "merged", "cached"]
+    ) -> None:
         """
         Print the location of the current datafile for some model
         """
         extension._model_from_string(model)
-        f = extension.datafile(model)
-        if not f.exists():
-            click.secho(f"Warning: {f} doesn't exist", err=True, fg="red")
-        click.echo(f)
+        if path_type == "cached":
+            click.echo(extension.cache_file(model))
+        elif path_type == "merged":
+            click.echo(extension.ttally_merged_path(model))
+        else:
+            click.echo(extension.datafile(model))
 
     @call_main.command(name="prompt", help="tally an item")
     @model_with_completion

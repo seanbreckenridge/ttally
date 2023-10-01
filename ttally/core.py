@@ -4,8 +4,6 @@ Encapsulates all interaction with ttally under a class, so its easier to extend
 
 import sys
 import os
-import json
-import shelve
 import inspect
 from pathlib import Path
 from typing import (
@@ -446,6 +444,8 @@ class Extension:
         for_models: Optional[Set[str]] = None,
         models: Optional[Dict[str, Type[NamedTuple]]] = None,
     ) -> bool:
+        import shelve
+
         cache_stale = False
         if models is None:
             models = self.MODELS
@@ -470,8 +470,13 @@ class Extension:
         hashes: Optional[FileHashes] = None,
         models: Optional[Dict[str, Type[NamedTuple]]] = None,
     ) -> None:
+        import shelve
+
         with shelve.open(self.hash_file) as db:
             db["hash"] = hashes or self.file_hashes(models=models)
+
+    def cache_file(self, model: str) -> Path:
+        return self.cache_dir / f"{model}-cache.json"
 
     def cache_sorted_exports(
         self,
@@ -496,7 +501,7 @@ class Extension:
             }
 
             for model, model_data in all_data.items():
-                with open(self.cache_dir / f"{model}-cache.json", "w") as f:
+                with open(self.cache_file(model), "w") as f:
                     f.write(model_data)
 
             self.save_hashes(hashes=fh, models=models)
@@ -511,10 +516,10 @@ class Extension:
         fh = self.file_hashes(for_models={model}, models=models)
         if self.cache_is_stale(hashes=fh, for_models={model}):
             raise RuntimeError("Cache is Stale")
-        cache_file = self.cache_dir / f"{model}-cache.json"
-        if not cache_file.exists():
+        cf = self.cache_file(model)
+        if not cf.exists():
             raise RuntimeError("Cache file does not exist")
-        return cache_file.read_text()
+        return cf.read_text()
 
     @classmethod
     def _load_json(cls, nt_string: str) -> Any:
@@ -525,6 +530,8 @@ class Extension:
             return orjson.loads(nt_string)
         except ImportError:
             pass
+        import json
+
         return json.loads(nt_string)
 
     def read_cache_json(
