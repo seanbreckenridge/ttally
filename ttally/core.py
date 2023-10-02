@@ -540,7 +540,7 @@ class Extension:
     def _write_hash(self, hashes: FileHashes) -> None:
         # NOTE: there is a possibility for a race condition here,
         # if another process reads while this is writing. However, that would
-        # only ivalidate the cache, so it would just mean we hit
+        # only invalidate the cache, so it would just mean we hit
         # the slow route, nothing should fatally error
         with open(self.hash_file, "w") as f:
             for model, hash_ in hashes.items():
