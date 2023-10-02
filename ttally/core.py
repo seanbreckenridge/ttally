@@ -429,7 +429,8 @@ class Extension:
         try:
             first_item: NamedTuple = res.peek()  # namedtuple-like
         except StopIteration:
-            raise RuntimeError(f"data queried from {nt} was empty")
+            # no items, so just exit
+            return
         dt_attr: str = self.namedtuple_extract_from_annotation(
             first_item.__class__, datetime
         )
