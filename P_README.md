@@ -50,6 +50,8 @@ $ water-recent 5
 2021-03-19 16:05:34     1.0
 ```
 
+The `-recent` aliases can accept `all` to print all items, or a duration like `1d` or `6h` to print data from the last few hours/days.
+
 ## Why/How
 
 ### Goals

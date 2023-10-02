@@ -1,6 +1,7 @@
 import sys
 import json
 from typing import NamedTuple, Optional, List, Sequence, Iterable, Any, Literal, Union
+from datetime import timedelta
 
 import click
 
@@ -121,7 +122,7 @@ def wrap_accessor(*, extension: Extension) -> click.Group:
         """
         extension.prompt_now(extension._model_from_string(model))
 
-    def _parse_recent(value: Union[str, int]) -> Union[int, Literal["all"]]:
+    def _parse_recent(value: Union[str, int]) -> Union[int, timedelta, Literal["all"]]:
         if isinstance(value, int):
             return value
         if value.lower() == "all":
@@ -129,7 +130,27 @@ def wrap_accessor(*, extension: Extension) -> click.Group:
         try:
             return int(value)
         except ValueError:
-            raise click.BadParameter(f"{value} is not 'all' or a valid integer")
+            pass
+
+        import re
+        from datetime import timedelta
+
+        timedelta_regex = re.compile(
+            r"^((?P<weeks>[\.\d]+?)w)?((?P<days>[\.\d]+?)d)?((?P<hours>[\.\d]+?)h)?((?P<minutes>[\.\d]+?)m)?((?P<seconds>[\.\d]+?)s)?$"
+        )
+
+        # This uses a syntax similar to the 'GNU sleep' command
+        # e.g.: 1w5d5h10m50s means '1 week, 5 days, 5 hours, 10 minutes, 50 seconds'
+        parts = timedelta_regex.match(value)
+        if parts is not None:
+            time_params = {
+                name: float(param) for name, param in parts.groupdict().items() if param
+            }
+            return timedelta(**time_params)
+
+        raise click.BadParameter(
+            f"{value} is not 'all', a valid integer, or a timedelta (e.g. 2d, 5h, 20m)"
+        )
 
     @call_main.command(name="recent", short_help="print recently tallied items")
     @model_with_completion
@@ -140,6 +161,13 @@ def wrap_accessor(*, extension: Extension) -> click.Group:
         default="",
         help="comma separated list of attributes to remove while printing",
     )
+    @click.option(
+        "-o",
+        "--output-format",
+        type=click.Choice(["json", "table"]),
+        default="table",
+        help="how to print output",
+    )
     @click.argument(
         "COUNT",
         default=10,
@@ -147,23 +175,27 @@ def wrap_accessor(*, extension: Extension) -> click.Group:
         callback=lambda ctx, arg, value: _parse_recent(value),
     )
     def _recent(
-        model: str, remove_attrs: str, count: Union[int, Literal["all"]]
+        model: str,
+        remove_attrs: str,
+        count: Union[int, timedelta, Literal["all"]],
+        output_format: Literal["json", "table"],
     ) -> None:
         """
         List recent items logged for this model
 
         Can provide 'all' for COUNT to list all items
+        A number for COUNT to list that many items
+        Or a timedelta (e.g. 2d, 5h, 20m) to list all items in that time range
         """
-        from more_itertools import take, always_reversible
+        nt = extension._model_from_string(model)
 
         # try to load cached data
         res: Optional[List[NamedTuple]] = None
         try:
-            # reverse so it is ordered for query properly
             from autotui.serialize import deserialize_namedtuple
-
-            res_iter = always_reversible(extension.read_cache_json(model=model))
-            res_items = take(count, res_iter) if count != "all" else list(res_iter)
+            # reverse so it is ordered for query properly
+            res_iter = list(reversed(extension.read_cache_json(model=model)))
+            res_items = extension.take_items(res_iter, count, nt)
             res = [
                 deserialize_namedtuple(o, to=extension.MODELS[model]) for o in res_items
             ]
@@ -174,6 +206,7 @@ def wrap_accessor(*, extension: Extension) -> click.Group:
         extension.query_print(
             extension._model_from_string(model),
             count,
+            output_format=output_format,
             remove_attrs=attrs,
             cached_data=res,
         )

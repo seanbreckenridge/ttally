@@ -8,6 +8,7 @@ import inspect
 from pathlib import Path
 from typing import (
     Literal,
+    TypeVar,
     Union,
     Set,
     Callable,
@@ -22,10 +23,12 @@ from typing import (
     Dict,
     TextIO,
 )
-from datetime import datetime
+from datetime import datetime, timedelta
 
 FileHashes = Dict[str, str]
 
+
+T = TypeVar("T")
 
 if TYPE_CHECKING:
     from autotui.fileio import Format
@@ -37,6 +40,12 @@ def expand_path(pathish: Union[str, Path]) -> Path:
         return pathish.expanduser().absolute()
     else:
         return Path(pathish).expanduser().absolute()
+
+
+def _readable_datetime(o: Any) -> Any:
+    if isinstance(o, datetime):
+        return str(o)
+    raise TypeError(f"Object of type {o.__class__.__name__} is not JSON serializable")
 
 
 class Extension:
@@ -345,25 +354,66 @@ class Extension:
             reverse=reverse,
         )
 
+    def take_items(
+        self,
+        items: List[T],
+        count: Union[int, timedelta, Literal["all"]],
+        nt: Union[str, Type[NamedTuple]],
+    ) -> List[T]:
+        """
+        Helper methods to take the first N items from a list, or
+        the first N items from a list which are within a timedelta
+
+        This works for both cached and uncached data (by just
+        checking the types at runtime)
+        """
+        if len(items) == 0:
+            return items
+
+        if count == "all":
+            return items
+
+        if isinstance(count, int):
+            return items[:count]
+
+        if isinstance(count, timedelta):
+            if isinstance(nt, str):
+                nt_type = self.MODELS[nt]
+            else:
+                nt_type = nt
+
+            dt_attr = self.namedtuple_extract_from_annotation(nt_type, datetime)
+            now = datetime.now().timestamp()
+
+            def accessor(o: T) -> float:
+                data: Union[int, datetime]
+                if isinstance(o, dict):
+                    data = o[dt_attr]
+                else:
+                    data = getattr(o, dt_attr)
+                if isinstance(data, datetime):
+                    return data.timestamp()
+                else:
+                    assert isinstance(data, (int, float))
+                    return data
+
+            total = count.total_seconds()
+            return [i for i in items if now - accessor(i) <= total]
+
     def query_recent(
-        self, nt: Type[NamedTuple], count: Union[int, Literal["all"]]
+        self, nt: Type[NamedTuple], count: Union[int, timedelta, Literal["all"]]
     ) -> List[NamedTuple]:
         """query the module for recent entries (based on datetime) from a namedtuple"""
-        import more_itertools
 
         items_itr = self.glob_namedtuple_by_datetime(nt, reverse=True)
-        items: List[NamedTuple]
-        if count == "all":
-            items = list(items_itr)
-        else:
-            items = more_itertools.take(count, items_itr)
-        return items
+        return self.take_items(list(items_itr), count, nt)
 
     def query_print(
         self,
         nt: Type[NamedTuple],
-        count: Union[int, Literal["all"]],
+        count: Union[int, timedelta, Literal["all"]],
         remove_attrs: List[str],
+        output_format: Literal["json", "table"] = "table",
         cached_data: Optional[List[NamedTuple]] = None,
     ) -> None:
         import more_itertools
@@ -375,7 +425,7 @@ class Extension:
         else:
             if count == "all":
                 count = len(cached_data)
-            res = more_itertools.peekable(more_itertools.take(count, cached_data))
+            res = more_itertools.peekable(self.take_items(cached_data, count, nt))
         try:
             first_item: NamedTuple = res.peek()  # namedtuple-like
         except StopIteration:
@@ -383,15 +433,42 @@ class Extension:
         dt_attr: str = self.namedtuple_extract_from_annotation(
             first_item.__class__, datetime
         )
-        # get non-datetime attr names, if they're not filtered
-        other_attrs: List[str] = [
-            k
-            for k in first_item._asdict().keys()
-            if k != dt_attr and k not in remove_attrs
-        ]
-        for o in res:
-            print(datetime.fromtimestamp(getattr(o, dt_attr).timestamp()), end="\t")
-            print(" \t".join([str(getattr(o, a)) for a in other_attrs]))
+        if output_format == "json":
+            import json
+            from autotui.serialize import serialize_namedtuple
+
+            for o in res:
+                # convert any other fields to json-compatible types
+                s = serialize_namedtuple(o)
+                sys.stdout.write(
+                    json.dumps(
+                        {
+                            # localize the datetime
+                            dt_attr: datetime.fromtimestamp(
+                                getattr(o, dt_attr).timestamp()
+                            ),
+                            # keep any other fields we want
+                            **{
+                                k: s[k]
+                                for k in o._fields
+                                if k != dt_attr and k not in remove_attrs
+                            },
+                        },
+                        separators=(",", ":"),
+                        default=_readable_datetime,
+                    ),
+                )
+                sys.stdout.write("\n")
+        else:
+            # get non-datetime attr names, if they're not filtered
+            other_attrs: List[str] = [
+                k
+                for k in first_item._asdict().keys()
+                if k != dt_attr and k not in remove_attrs
+            ]
+            for o in res:
+                print(datetime.fromtimestamp(getattr(o, dt_attr).timestamp()), end="\t")
+                print(" \t".join([str(getattr(o, a)) for a in other_attrs]))
 
     ###########
     #         #
