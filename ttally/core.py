@@ -108,7 +108,7 @@ class Extension:
             else self.compute_cache_dir(cache_dir_envvar)
         )
 
-        self.hash_file = str(self.cache_dir / "ttally_hash.pickle")
+        self.hash_file = str(self.cache_dir / "hash.txt")
 
         self.MODELS: Dict[str, Type[NamedTuple]] = {
             name.casefold(): klass
@@ -515,6 +515,37 @@ class Extension:
         else:
             return {model: self.file_hash(model=model) for model in models}
 
+    def _read_hash(self) -> Optional[FileHashes]:
+        """
+        Plaintext file, looks like:
+
+        model_name:hash
+        model_name:hash
+        model_name:hash
+        """
+
+        data = {}
+        try:
+            with open(self.hash_file, "r") as f:
+                for line in f:
+                    ls = line.strip()
+                    if not ls:
+                        continue
+                    model, hash_ = ls.split(":", maxsplit=1)
+                    data[model] = hash_
+        except FileNotFoundError:
+            pass
+        return data
+
+    def _write_hash(self, hashes: FileHashes) -> None:
+        # NOTE: there is a possibility for a race condition here,
+        # if another process reads while this is writing. However, that would
+        # only ivalidate the cache, so it would just mean we hit
+        # the slow route, nothing should fatally error
+        with open(self.hash_file, "w") as f:
+            for model, hash_ in hashes.items():
+                f.write(f"{model}:{hash_}\n")
+
     def cache_is_stale(
         self,
         *,
@@ -522,23 +553,20 @@ class Extension:
         for_models: Optional[Set[str]] = None,
         models: Optional[Dict[str, Type[NamedTuple]]] = None,
     ) -> bool:
-        import shelve
-
         cache_stale = False
         if models is None:
             models = self.MODELS
 
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
-        with shelve.open(self.hash_file) as db:
-            fh = hashes or self.file_hashes(for_models=for_models, models=models)
-            db_hashes: FileHashes = db.get("hash", {})
-            for model, current_hash in fh.items():
-                if for_models and model not in for_models:
-                    continue
-                if current_hash != db_hashes.get(model):
-                    cache_stale = True
-                    break
+        fh = hashes or self.file_hashes(for_models=for_models, models=models)
+        db_hashes: FileHashes = self._read_hash() or {}
+        for model, current_hash in fh.items():
+            if for_models and model not in for_models:
+                continue
+            if current_hash != db_hashes.get(model):
+                cache_stale = True
+                break
 
         return cache_stale
 
@@ -548,10 +576,8 @@ class Extension:
         hashes: Optional[FileHashes] = None,
         models: Optional[Dict[str, Type[NamedTuple]]] = None,
     ) -> None:
-        import shelve
-
-        with shelve.open(self.hash_file) as db:
-            db["hash"] = hashes or self.file_hashes(models=models)
+        new_hashes = hashes or self.file_hashes(models=models)
+        self._write_hash(new_hashes)
 
     def cache_file(self, model: str) -> Path:
         return self.cache_dir / f"{model}-cache.json"
