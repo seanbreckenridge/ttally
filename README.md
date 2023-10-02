@@ -254,7 +254,11 @@ Options:
   --help          Show this message and exit.
 ```
 
-I personally run it [once every 3 minutes](https://sean.fish/d/ttally_cache.job?redirect) in the background, so at least my first interaction with `ttally` is guaranteed to be [fast](https://github.com/seanbreckenridge/ttally/issues/5#issuecomment-1321389800)
+I run this using [entr](https://github.com/eradman/entr) whenever the data files change. In the background, like:
+
+```
+find ~/data/ttally -type f | entr -n ttally update-cache
+```
 
 Default cache directory can be overwritten with the `TTALLY_CACHE_DIR` environment variable
 
