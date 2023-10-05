@@ -48,12 +48,12 @@ from enum import Enum
 
 # dynamically create an enum using each line of the file as an option
 with open(os.path.join(os.environ["HPIDATA"], "self_types.txt")) as f:
-    SelfTypes = Enum("SelfTypes", [s.rstrip().upper() for s in f])
+    SelfT = Enum("SelfT", [s.rstrip().upper() for s in f])
 
 
 class Self(NamedTuple):
     when: datetime
-    what: SelfTypes  # type: ignore
+    what: SelfT  # type: ignore
 ```
 
 to (shell aliases)...
