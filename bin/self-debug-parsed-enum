@@ -1,0 +1,7 @@
+#!/usr/bin/env python3
+# prints the generated enum from the self type,
+# to make sure its what Im expecting
+
+from ttally.__main__ import ext
+
+print("\n".join(list(ext.MODELS["self"].__annotations__["what"].__members__)))
