@@ -372,11 +372,10 @@ class Extension:
 
         if count == "all":
             return items
-
-        if isinstance(count, int):
+        elif isinstance(count, int):
             return items[:count]
-
-        if isinstance(count, timedelta):
+        else:
+            assert isinstance(count, timedelta)
             if isinstance(nt, str):
                 nt_type = self.MODELS[nt]
             else:
