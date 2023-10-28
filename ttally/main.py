@@ -193,6 +193,7 @@ def wrap_accessor(*, extension: Extension) -> click.Group:
         res: Optional[List[NamedTuple]] = None
         try:
             from autotui.serialize import deserialize_namedtuple
+
             # reverse so it is ordered for query properly
             res_iter = list(reversed(extension.read_cache_json(model=model)))
             res_items = extension.take_items(res_iter, count, nt)

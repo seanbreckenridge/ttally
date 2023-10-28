@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# uses https://sean.fish/c/shellscripts/picker?redirect to let me add
+# something to self by using rofi/system launcher
+
+set -euo pipefail
+set -x
+
+PICKED="$(self-enum-options | picker -p 'self: ')" || exit 1
+if [[ -z "$PICKED" ]]; then
+	notify 'ttally' 'nothing picked'
+	exit 1
+fi
+
+TEMPFILE="$(mktemp)"
+jq --null-input --arg TIMESTAMP "$(date +'%s')" --arg PICKED "$PICKED" \
+	'[{when: $TIMESTAMP, what: $PICKED}]' >"$TEMPFILE"
+python3 -m ttally from-json self --file "$TEMPFILE" || exit $?
+command rm -v "$TEMPFILE"
