@@ -168,7 +168,7 @@ ttally merge food
 ## Installation
 
 ```bash
-pip install ttally
+pip install ttally  # can use 'pip install ttally[optional]' for extra features
 ```
 
 ```
