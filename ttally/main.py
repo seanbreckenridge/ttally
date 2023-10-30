@@ -168,6 +168,13 @@ def wrap_accessor(*, extension: Extension) -> click.Group:
         default="table",
         help="how to print output",
     )
+    @click.option(
+        "-h/-d",
+        "--human-readable/--exact-dates",
+        is_flag=True,
+        default=False,
+        help="print dates in a human readable format",
+    )
     @click.argument(
         "COUNT",
         default=10,
@@ -179,6 +186,7 @@ def wrap_accessor(*, extension: Extension) -> click.Group:
         remove_attrs: str,
         count: Union[int, timedelta, Literal["all"]],
         output_format: Literal["json", "table"],
+        human_readable: bool,
     ) -> None:
         """
         List recent items logged for this model
@@ -210,6 +218,7 @@ def wrap_accessor(*, extension: Extension) -> click.Group:
             output_format=output_format,
             remove_attrs=attrs,
             cached_data=res,
+            human_readable=human_readable,
         )
 
     @call_main.command(short_help="export all data from a model")

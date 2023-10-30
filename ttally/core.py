@@ -42,12 +42,6 @@ def expand_path(pathish: Union[str, Path]) -> Path:
         return Path(pathish).expanduser().absolute()
 
 
-def _readable_datetime(o: Any) -> Any:
-    if isinstance(o, datetime):
-        return str(o)
-    raise TypeError(f"Object of type {o.__class__.__name__} is not JSON serializable")
-
-
 class Extension:
     def __init__(
         self,
@@ -414,6 +408,7 @@ class Extension:
         remove_attrs: List[str],
         output_format: Literal["json", "table"] = "table",
         cached_data: Optional[List[NamedTuple]] = None,
+        human_readable: bool = False,
     ) -> None:
         import more_itertools
 
@@ -433,6 +428,21 @@ class Extension:
         dt_attr: str = self.namedtuple_extract_from_annotation(
             first_item.__class__, datetime
         )
+
+        def _serialize_datetime(dt: datetime) -> str:
+            if human_readable:
+                try:
+                    import arrow
+
+                    return arrow.get(dt).humanize()
+                except ImportError:
+                    import warnings
+
+                    warnings.warn(
+                        "arrow not installed (pip install arrow), falling back to default datetime"
+                    )
+            return str(dt.astimezone())
+
         if output_format == "json":
             import json
             from autotui.serialize import serialize_namedtuple
@@ -443,10 +453,7 @@ class Extension:
                 sys.stdout.write(
                     json.dumps(
                         {
-                            # localize the datetime
-                            dt_attr: datetime.fromtimestamp(
-                                getattr(o, dt_attr).timestamp()
-                            ),
+                            dt_attr: _serialize_datetime(getattr(o, dt_attr)),
                             # keep any other fields we want
                             **{
                                 k: s[k]
@@ -455,7 +462,6 @@ class Extension:
                             },
                         },
                         separators=(",", ":"),
-                        default=_readable_datetime,
                     ),
                 )
                 sys.stdout.write("\n")
@@ -467,8 +473,8 @@ class Extension:
                 if k != dt_attr and k not in remove_attrs
             ]
             for o in res:
-                print(datetime.fromtimestamp(getattr(o, dt_attr).timestamp()), end="\t")
-                print(" \t".join([str(getattr(o, a)) for a in other_attrs]))
+                print(_serialize_datetime(getattr(o, dt_attr)), end="\t")
+                print("\t".join([str(getattr(o, a)) for a in other_attrs]))
 
     ###########
     #         #
