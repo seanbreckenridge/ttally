@@ -441,7 +441,7 @@ class Extension:
                     warnings.warn(
                         "arrow not installed (pip install arrow), falling back to default datetime"
                     )
-            return str(dt.astimezone())
+            return str(dt.astimezone().replace(tzinfo=None))
 
         if output_format == "json":
             import json
