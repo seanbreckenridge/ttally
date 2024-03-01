@@ -8,6 +8,37 @@ import click
 from .core import Extension
 
 
+def _parse_recent(value: Union[str, int]) -> Union[int, timedelta, Literal["all"]]:
+    if isinstance(value, int):
+        return value
+    if value.lower() == "all":
+        return "all"
+    try:
+        return int(value)
+    except ValueError:
+        pass
+
+    import re
+    from datetime import timedelta
+
+    timedelta_regex = re.compile(
+        r"^((?P<weeks>[\.\d]+?)w)?((?P<days>[\.\d]+?)d)?((?P<hours>[\.\d]+?)h)?((?P<minutes>[\.\d]+?)m)?((?P<seconds>[\.\d]+?)s)?$"
+    )
+
+    # This uses a syntax similar to the 'GNU sleep' command
+    # e.g.: 1w5d5h10m50s means '1 week, 5 days, 5 hours, 10 minutes, 50 seconds'
+    parts = timedelta_regex.match(value)
+    if parts is not None:
+        time_params = {
+            name: float(param) for name, param in parts.groupdict().items() if param
+        }
+        return timedelta(**time_params)
+
+    raise click.BadParameter(
+        f"{value} is not 'all', a valid integer, or a timedelta (e.g. 2d, 5h, 20m)"
+    )
+
+
 def wrap_accessor(*, extension: Extension) -> click.Group:
     @click.group()
     def call_main() -> None:
@@ -121,36 +152,6 @@ def wrap_accessor(*, extension: Extension) -> click.Group:
         Prompt for every field in the model, except datetime, which should default to now
         """
         extension.prompt_now(extension._model_from_string(model))
-
-    def _parse_recent(value: Union[str, int]) -> Union[int, timedelta, Literal["all"]]:
-        if isinstance(value, int):
-            return value
-        if value.lower() == "all":
-            return "all"
-        try:
-            return int(value)
-        except ValueError:
-            pass
-
-        import re
-        from datetime import timedelta
-
-        timedelta_regex = re.compile(
-            r"^((?P<weeks>[\.\d]+?)w)?((?P<days>[\.\d]+?)d)?((?P<hours>[\.\d]+?)h)?((?P<minutes>[\.\d]+?)m)?((?P<seconds>[\.\d]+?)s)?$"
-        )
-
-        # This uses a syntax similar to the 'GNU sleep' command
-        # e.g.: 1w5d5h10m50s means '1 week, 5 days, 5 hours, 10 minutes, 50 seconds'
-        parts = timedelta_regex.match(value)
-        if parts is not None:
-            time_params = {
-                name: float(param) for name, param in parts.groupdict().items() if param
-            }
-            return timedelta(**time_params)
-
-        raise click.BadParameter(
-            f"{value} is not 'all', a valid integer, or a timedelta (e.g. 2d, 5h, 20m)"
-        )
 
     @call_main.command(name="recent", short_help="print recently tallied items")
     @model_with_completion
