@@ -1,11 +1,32 @@
 import sys
 import json
-from typing import NamedTuple, Optional, List, Sequence, Iterable, Any, Literal, Union
+from typing import (
+    NamedTuple,
+    Optional,
+    List,
+    Sequence,
+    Iterable,
+    Any,
+    Literal,
+    Union,
+    Generator,
+)
 from datetime import timedelta
+from contextlib import contextmanager
 
 import click
+import autotui.exceptions
 
 from .core import Extension
+
+
+@contextmanager
+def handle_autotui_errors() -> Generator[None, None, None]:
+    try:
+        yield
+    except autotui.exceptions.AutoTUIException as e:
+        click.echo(f"Error: {e}", err=True)
+        sys.exit(1)
 
 
 def _parse_recent(value: Union[str, int]) -> Union[int, timedelta, Literal["all"]]:
@@ -97,17 +118,18 @@ def wrap_accessor(*, extension: Extension) -> click.Group:
         and saves it to the file
         """
 
-        if file is None:
-            extension.save_from(
-                extension._model_from_string(model),
-                use_input=sys.stdin,
-                partial=partial,
-            )
-        else:
-            with open(file, "r") as f:
+        with handle_autotui_errors():
+            if file is None:
                 extension.save_from(
-                    extension._model_from_string(model), use_input=f, partial=partial
+                    extension._model_from_string(model),
+                    use_input=sys.stdin,
+                    partial=partial,
                 )
+            else:
+                with open(file, "r") as f:
+                    extension.save_from(
+                        extension._model_from_string(model), use_input=f, partial=partial
+                    )
 
     @call_main.command(short_help="print the datafile location")
     @model_with_completion
@@ -136,7 +158,8 @@ def wrap_accessor(*, extension: Extension) -> click.Group:
         """
         Prompt for every field in the given model
         """
-        extension.prompt(extension._model_from_string(model))
+        with handle_autotui_errors():
+            extension.prompt(extension._model_from_string(model))
 
     @call_main.command(name="models", help="list models")
     def _models_cmd() -> None:
@@ -151,7 +174,8 @@ def wrap_accessor(*, extension: Extension) -> click.Group:
         """
         Prompt for every field in the model, except datetime, which should default to now
         """
-        extension.prompt_now(extension._model_from_string(model))
+        with handle_autotui_errors():
+            extension.prompt_now(extension._model_from_string(model))
 
     @call_main.command(name="recent", short_help="print recently tallied items")
     @model_with_completion
