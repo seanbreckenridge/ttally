@@ -292,7 +292,12 @@ class Query(NamedTuple):
             self.run_action(items)
 
 
-@click.command()
+@click.group()
+def main() -> None:
+    pass
+
+
+@main.command()
 @click.option(
     "-e",
     "--eval",
@@ -303,7 +308,7 @@ class Query(NamedTuple):
     help="Evaluate some python code before running the queries",
 )
 @click.argument("QUERY", type=str, nargs=-1)
-def main(eval_str: Sequence[str], query: Sequence[str]) -> None:
+def query(eval_str: Sequence[str], query: Sequence[str]) -> None:
     """
     each query is a python lambda filter
     which is applied to the list of items from the model
