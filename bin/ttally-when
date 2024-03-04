@@ -87,6 +87,9 @@ def _infer_model(query: QueryFunc) -> Type[NamedTuple]:
     return model_type
 
 
+MINUTE_IN_HOURS = 1 / 60
+
+
 def dt_humanize(dt: datetime) -> str:
     import arrow
 
@@ -96,7 +99,9 @@ def dt_humanize(dt: datetime) -> str:
     if hours_distance > 48:
         return arrow.get(dt).humanize(granularity=["day"])
     else:
-        if hours_distance < 2:
+        if hours_distance < MINUTE_IN_HOURS:
+            return arrow.get(dt).humanize()
+        elif hours_distance < 2:
             return arrow.get(dt).humanize(granularity=["minute"])
         else:
             return arrow.get(dt).humanize(granularity=["hour"])
@@ -416,9 +421,19 @@ def display(
     """
     import tabulate
 
+    def _color(s: str, is_expired: bool, is_silenced: bool) -> str:
+        if is_silenced:
+            return click.style(s, fg="blue")
+        if is_expired:
+            return click.style(s, fg="red")
+        return click.style(s, fg="green")
+
     def _filter() -> Iterator[dict[str, Any]]:
         for line in click.get_text_stream("stdin"):
             data = json.loads(line)
+            # no data, must be null
+            if not data["when"]:
+                continue
             if expired and not data["expired"]:
                 continue
             if not show_silenced and data.get("silenced", False):
@@ -441,13 +456,11 @@ def display(
                         [
                             d["name"],
                             d["when"],
-                            click.style(
-                                d["next"], fg="red" if d["expired"] else "green"
-                            ),
+                            _color(d["next"], d["expired"], d.get("silenced", False)),
                         ]
                         for d in data
                     ],
-                    headers=["name", "when", "next"],
+                    headers=["name", "last", "next"],
                     tablefmt=table_format,
                     numalign="right",
                     stralign="right",

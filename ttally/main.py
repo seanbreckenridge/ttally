@@ -128,7 +128,9 @@ def wrap_accessor(*, extension: Extension) -> click.Group:
             else:
                 with open(file, "r") as f:
                     extension.save_from(
-                        extension._model_from_string(model), use_input=f, partial=partial
+                        extension._model_from_string(model),
+                        use_input=f,
+                        partial=partial,
                     )
 
     @call_main.command(short_help="print the datafile location")
