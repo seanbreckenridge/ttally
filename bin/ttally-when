@@ -7,15 +7,15 @@ next do a task, based on the last time I did it and a frequency
 
 import json
 import time
-import inspect
 from typing import (
+    List,
+    get_args,
     Any,
     Union,
     assert_never,
     NamedTuple,
     Iterator,
     Type,
-    List,
     Sequence,
     Callable,
     Optional,
@@ -28,7 +28,7 @@ import click
 import ttally.core as ttally
 import more_itertools
 
-_CACHE: dict[str, List[NamedTuple]] = {}
+_CACHE: dict[str, list[NamedTuple]] = {}
 
 
 class CachedExtension(ttally.Extension):
@@ -58,7 +58,7 @@ def since(item: NamedTuple) -> timedelta:
     return datetime.now().astimezone() - when(item)
 
 
-def recent(results: List[NamedTuple]) -> Optional[NamedTuple]:
+def recent(results: list[NamedTuple]) -> Optional[NamedTuple]:
     if len(results) == 0:
         return None
     return max(results, key=when)
@@ -68,6 +68,8 @@ QueryFunc = Callable[[NamedTuple], bool]
 
 
 def _infer_model(query: QueryFunc) -> Type[NamedTuple]:
+    import inspect
+
     # inspect the callable name
     # to determine the model type
 
@@ -185,6 +187,7 @@ def desc(
             if td_str and with_timedelta_dt:
                 d["next"] = td_str
                 d["next_epoch"] = int(with_timedelta_dt.timestamp())
+                d["expired"] = with_timedelta_dt < datetime.now().astimezone()
 
             buf = json.dumps(d)
         case _:
@@ -193,15 +196,15 @@ def desc(
     return buf
 
 
-def descs(items: List[Optional[NamedTuple]], **kwargs: Any) -> List[str | None]:
+def descs(items: list[Optional[NamedTuple]], **kwargs: Any) -> list[str | None]:
     return [desc(item, **kwargs) for item in items]
 
 
 class Query(NamedTuple):
-    query: QueryFunc
+    filter: QueryFunc
     raw_str: str
     model_type: Type[NamedTuple]
-    action: Optional[Callable[[Union[NamedTuple, List[NamedTuple]]], None]]
+    action: Optional[Callable[[Union[NamedTuple, list[NamedTuple]]], None]]
     action_on_results: bool = False
 
     @staticmethod
@@ -213,13 +216,13 @@ class Query(NamedTuple):
             if not callable(query):
                 raise ValueError(f"Query must be callable, got {query}")
 
-            model_type = _infer_model(query)
+            Model = _infer_model(query)
             action = f"lambda results: {action_str}"
 
             return Query(
-                query=query,
+                filter=query,
                 raw_str=s,
-                model_type=model_type,
+                model_type=Model,
                 action=eval(action),
                 action_on_results=True,
             )
@@ -231,12 +234,12 @@ class Query(NamedTuple):
             if not callable(query):
                 raise ValueError(f"Query must be callable, got {query}")
 
-            model_type = _infer_model(query)
-            action = f"lambda {model_type.__name__.casefold()}: {action_str}"
+            Model = _infer_model(query)
+            action = f"lambda {Model.__name__.casefold()}: {action_str}"
             return Query(
-                query=query,
+                filter=query,
                 raw_str=s,
-                model_type=model_type,
+                model_type=Model,
                 action=eval(action),
                 action_on_results=False,
             )
@@ -246,16 +249,16 @@ class Query(NamedTuple):
             if not callable(query):
                 raise ValueError(f"Query must be callable, got {query}")
 
-            model_type = _infer_model(query)
+            Model = _infer_model(query)
             return Query(
-                query=query,
+                filter=query,
                 raw_str=s,
-                model_type=model_type,
+                model_type=Model,
                 action=None,
                 action_on_results=False,
             )
 
-    def run_action(self, item: NamedTuple | List[NamedTuple]) -> None:
+    def run_action(self, item: List[NamedTuple] | NamedTuple) -> None:
         if self.action:
             try:
                 self.action(item)
@@ -279,7 +282,7 @@ class Query(NamedTuple):
     def run(self) -> None:
         items = []
         for item in ext.glob_namedtuple(self.model_type):
-            if self.query(item):
+            if self.filter(item):
                 if not self.action:
                     print(item)
                 else:
@@ -361,6 +364,95 @@ def query(eval_str: Sequence[str], query: Sequence[str]) -> None:
         return
     for q in parsed_queries:
         q.run()
+
+
+DisplayFormat = Literal["name", "table", "json"]
+
+
+@main.command()
+@click.option("-k", "--sort-key", type=str, default="next_epoch")
+@click.option("-r", "--sort-reverse", is_flag=True, default=False, help="reverse sort")
+@click.option(
+    "-e/-a",
+    "--expired/--all",
+    is_flag=True,
+    default=False,
+    help="only show expired items",
+)
+@click.option(
+    "-f", "--table-format", type=str, default="simple_outline", help="table format"
+)
+@click.option(
+    "-o",
+    "--output-format",
+    type=click.Choice(get_args(DisplayFormat)),
+    default="table",
+)
+# https://github.com/seanbreckenridge/reminder-sink
+@click.option(
+    "-s/-h",
+    "--show-silenced/--hide-silenced",
+    default=True,
+    help="if the 'silenced' key is present, filter out items that are silenced",
+)
+def display(
+    sort_key: str,
+    sort_reverse: bool,
+    expired: bool,
+    output_format: DisplayFormat,
+    table_format: str,
+    show_silenced: bool,
+) -> None:
+    """
+    takes the json output from STDIN and creates nicer
+    output for the terminal
+
+    Input should be JSONL (newline separated JSON objects, not a list)
+
+    e.g.
+    {"name": "vitamin", "when": "26 hours ago", "epoch": 1709492497, "next": "3 hours ago", "next_epoch": 1709575297, "expired": true}
+
+    ttally-when query | jq ... | ttally-when display -e
+    """
+    import tabulate
+
+    def _filter() -> Iterator[dict[str, Any]]:
+        for line in click.get_text_stream("stdin"):
+            data = json.loads(line)
+            if expired and not data["expired"]:
+                continue
+            if not show_silenced and data.get("silenced", False):
+                continue
+            yield data
+
+    data = list(_filter())
+
+    data.sort(key=lambda d: d[sort_key], reverse=sort_reverse)
+
+    match output_format:
+        case "json":
+            click.echo(json.dumps(data))
+        case "name":
+            click.echo("\n".join(d["name"] for d in data))
+        case "table":
+            click.echo(
+                tabulate.tabulate(
+                    [
+                        [
+                            d["name"],
+                            d["when"],
+                            click.style(
+                                d["next"], fg="red" if d["expired"] else "green"
+                            ),
+                        ]
+                        for d in data
+                    ],
+                    headers=["name", "when", "next"],
+                    tablefmt=table_format,
+                    numalign="right",
+                    stralign="right",
+                )
+            )
 
 
 if __name__ == "__main__":
