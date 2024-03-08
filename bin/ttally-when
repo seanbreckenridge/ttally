@@ -422,10 +422,11 @@ def display(
     import tabulate
 
     def _color(s: str, is_expired: bool, is_silenced: bool) -> str:
-        if is_silenced:
-            return click.style(s, fg="blue")
         if is_expired:
-            return click.style(s, fg="red")
+            if is_silenced:
+                return click.style(s, fg="blue")
+            else:
+                return click.style(s, fg="red")
         return click.style(s, fg="green")
 
     def _filter() -> Iterator[dict[str, Any]]:
