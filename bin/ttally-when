@@ -373,6 +373,14 @@ def query(eval_str: Sequence[str], query: Sequence[str]) -> None:
 
 DisplayFormat = Literal["name", "table", "json"]
 
+def _color(s: str, is_expired: bool, is_silenced: bool) -> str:
+    if is_expired:
+        if is_silenced:
+            return click.style(s, fg="blue")
+        else:
+            return click.style(s, fg="red")
+    return click.style(s, fg="green")
+
 
 @main.command()
 @click.option("-k", "--sort-key", type=str, default="next_epoch")
@@ -417,17 +425,9 @@ def display(
     e.g.
     {"name": "vitamin", "when": "26 hours ago", "epoch": 1709492497, "next": "3 hours ago", "next_epoch": 1709575297, "expired": true}
 
-    ttally-when query | jq ... | ttally-when display -e
+    ttally-when query '...' | jq ... | ttally-when display -e
     """
     import tabulate
-
-    def _color(s: str, is_expired: bool, is_silenced: bool) -> str:
-        if is_expired:
-            if is_silenced:
-                return click.style(s, fg="blue")
-            else:
-                return click.style(s, fg="red")
-        return click.style(s, fg="green")
 
     def _filter() -> Iterator[dict[str, Any]]:
         for line in click.get_text_stream("stdin"):
