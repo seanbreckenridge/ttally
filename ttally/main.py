@@ -450,4 +450,45 @@ def wrap_accessor(*, extension: Extension) -> click.Group:
 
         dump_to(data, f)
 
+    @call_main.command(short_help="drop the last n items")
+    @click.option(
+        "-n",
+        "--count",
+        type=int,
+        required=True,
+        help="number of items to drop",
+        default=1,
+    )
+    @model_with_completion
+    def drop_last(model: str, count: int) -> None:
+        """
+        Drop the last n items from the datafile
+        """
+        nt = extension._model_from_string(model)
+        f = extension.datafile(model)
+        if not f.exists():
+            click.secho(f"Error: {f} doesn't exist. ", err=True, fg="red")
+            return
+
+        import pprint
+        from autotui.shortcuts import load_from, dump_to
+
+        data = list(load_from(to=nt, path=f))
+        if len(data) == 0:
+            click.secho(f"Error: No data for {model}", err=True, fg="red")
+            return
+
+        removed = data[-count:]
+        data = data[:-count]
+
+        pprint.pprint("Removing:")
+        pprint.pprint(removed)
+
+        if len(data) == 0:
+            click.secho(f"Warning: No data left for {model}", err=True, fg="yellow")
+            if click.confirm("Remove file?"):
+                f.unlink()
+        else:
+            dump_to(data, f)
+
     return call_main
